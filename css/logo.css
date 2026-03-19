@@ -1,0 +1,46 @@
+/* Logo Flutuante e Redimensionável */
+.logo {
+    position: absolute; /* Posição absoluta em relação à .page */
+    top: 15mm;          /* Posição inicial sugerida */
+    left: 20mm;
+    width: 150px;       /* Largura inicial */
+    height: auto;
+    z-index: 50;        /* Acima do texto normal */
+    
+    /* Habilitar redimensionamento nativo do navegador */
+    resize: both;
+    overflow: hidden; /* Necessário para o resize funcionar */
+    
+    /* Estilo para indicar interatividade */
+    cursor: move; /* Cursor de movimento */
+    border: 1px dashed transparent; /* Borda invisível por padrão */
+    transition: border-color 0.2s;
+}
+
+.logo:hover {
+    border-color: #2b579a; /* Mostra borda ao passar o mouse */
+}
+
+.logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+    pointer-events: none; /* Evita arrastar a imagem fantasma, arrasta a div */
+}
+
+/* Ajuste no Header para compensar a saída do logo do fluxo */
+.header {
+    /* Como o logo agora é absoluto, o header flex vai alinhar o resto.
+       Vamos garantir que a info da empresa fique na direita. */
+    justify-content: flex-end; 
+    min-height: 80px; /* Reserva espaço vertical se necessário */
+}
+
+/* Ajustes para impressão */
+@media print {
+    .logo {
+        border: none !important; /* Remove borda tracejada */
+        resize: none; /* Remove handle de resize */
+    }
+}

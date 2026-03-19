@@ -1,0 +1,235 @@
+/* Estilos da tela de edição */
+body {
+    background-color: #525659; /* Cor de fundo estilo leitor de PDF */
+    font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    margin: 0;
+    overflow-x: hidden;
+}
+
+.controls {
+    margin-bottom: 20px;
+    position: sticky;
+    top: 20px;
+    z-index: 100;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+    background-color: rgba(255, 255, 255, 0.9);
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+}
+
+button {
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    background-color: #2b579a; /* Azul NOX */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    transition: background 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+button:hover {
+    background-color: #1e3f70;
+}
+
+button.secondary {
+    background-color: #6c757d;
+}
+
+button.secondary:hover {
+    background-color: #5a6268;
+}
+
+/* Toolbar de Formatação */
+.toolbar {
+    display: flex;
+    gap: 5px;
+    margin-right: 20px;
+    border-right: 1px solid #ccc;
+    padding-right: 20px;
+}
+
+.toolbar button {
+    padding: 8px;
+    background-color: #f8f9fa;
+    color: #333;
+    box-shadow: none;
+    border: 1px solid #ddd;
+}
+
+.toolbar button:hover {
+    background-color: #e2e6ea;
+}
+
+.toolbar button.active {
+    background-color: #dbeafe;
+    border-color: #2b579a;
+    color: #2b579a;
+}
+
+/* Formato Folha A4 */
+.page {
+    width: 210mm;
+    min-height: 297mm;
+    background: white;
+    margin-bottom: 20px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    padding: 20mm;
+    box-sizing: border-box;
+    position: relative;
+}
+
+/* Responsividade para ecrãs menores (escala a folha A4) */
+@media screen and (max-width: 220mm) {
+    .page {
+        width: 100%;
+        min-height: auto;
+        padding: 10mm;
+    }
+    
+    .controls {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .toolbar {
+        margin-right: 0;
+        border-right: none;
+        border-bottom: 1px solid #ccc;
+        padding-right: 0;
+        padding-bottom: 10px;
+        margin-bottom: 10px;
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* Cabeçalho */
+.header {
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 2px solid #2b579a;
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+}
+.logo img { 
+    height: 50px; /* Ajustado para consistência */
+    object-fit: contain;
+}
+
+.company-info {
+    text-align: right;
+    font-size: 10px;
+    color: #555;
+    line-height: 1.3;
+}
+
+/* Títulos e Secções */
+.product-title {
+    text-align: center;
+    font-size: 22px;
+    font-weight: bold;
+    color: #333;
+    margin: 20px 0;
+}
+
+.section-title {
+    background-color: #f0f0f0;
+    padding: 5px 10px;
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 13px;
+    border-left: 5px solid #f26522; /* Laranja NOX */
+    margin-top: 20px;
+    margin-bottom: 10px;
+    color: #333;
+}
+
+/* Áreas Editáveis */
+.editable {
+    font-size: 12px;
+    color: #333;
+    line-height: 1.5;
+    outline: none;
+    min-height: 20px;
+    padding: 4px;
+    border: 1px solid transparent;
+    transition: all 0.2s;
+}
+
+.editable:hover {
+    background-color: #fcfce0; /* Amarelinho para indicar que é editável */
+    border: 1px dashed #ccc;
+    border-radius: 4px;
+}
+
+.editable:focus {
+    background-color: #fff;
+    border: 1px solid #2b579a;
+    border-radius: 4px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+th, td {
+    border: 1px solid #ccc;
+    padding: 6px;
+    text-align: left;
+}
+
+th {
+    background-color: #f9f9f9;
+    font-weight: bold;
+}
+
+/* Helper classes */
+.hidden {
+    display: none !important;
+}
+
+/* Regras de Impressão / Geração de PDF */
+@media print {
+    body {
+        background-color: white;
+        padding: 0;
+    }
+    .controls {
+        display: none; /* Esconde o botão na hora de imprimir */
+    }
+    .page {
+        box-shadow: none;
+        margin: 0;
+        width: 210mm;
+        height: 297mm;
+        page-break-after: always; /* Garante que cada div .page seja uma folha separada */
+        padding: 15mm 20mm;
+    }
+    .editable:hover, .editable:focus {
+        background-color: transparent;
+        border: 1px solid transparent;
+    }
+}
