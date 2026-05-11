@@ -1,235 +1,442 @@
-/* Estilos da tela de edição */
+/* ========================================================
+   CSS GLOBAL E CORES EXATAS DA NOX COR (BASEADO NOS PRINTS)
+   ======================================================== */
+
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap");
+
+:root {
+  --nox-blue-dark: #003df5; /* Azul escuro vibrante (Títulos, Faixa) */
+  --nox-cyan: #008cff; /* Azul claro/Ciano (Texto "FICHA") */
+  --nox-cyan-dark: #0077e6; /* Azul mais escuro para o "TÉCNICA" */
+  --nox-orange: #ff5e00; /* Laranja vibrante (Fundo dos Ícones) */
+  --nox-note-blue: #1c75ff; /* Azul da caixa de NOTA */
+  --bg-color: #525659;
+
+  /* FAMÍLIAS DE FONTES (Via Google Fonts) */
+  --font-ficha: "Montserrat", Arial, sans-serif; /* Alt. para Harmonia Sans */
+  --font-section: "Jost", Arial, sans-serif; /* Alt. para Stereonic */
+  --font-topic: "Titillium Web", Arial, sans-serif; /* Alt. para Recta Medium */
+  --font-body: "Nunito", Arial, sans-serif; /* Alt. para Aceh SoftRegular */
+}
+
 body {
-    background-color: #525659; /* Cor de fundo estilo leitor de PDF */
-    font-family: Arial, sans-serif;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 20px;
-    margin: 0;
-    overflow-x: hidden;
+  background-color: var(--bg-color);
+  font-family: var(--font-body);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  margin: 0;
+  overflow-x: hidden;
+  color: #000;
 }
 
+/* Aplicação inteligente da fonte de Tópicos (Recta Medium / Titillium Web) para negritos e cabeçalhos */
+strong,
+b,
+th,
+td[style*="font-weight: bold"] {
+  font-family: var(--font-topic);
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+
+/* ========================================================
+   BARRA DE FERRAMENTAS (Não imprime)
+   ======================================================== */
 .controls {
-    margin-bottom: 20px;
-    position: sticky;
-    top: 20px;
-    z-index: 100;
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    justify-content: center;
-    background-color: rgba(255, 255, 255, 0.9);
-    padding: 10px;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+  margin-bottom: 20px;
+  position: sticky;
+  top: 20px;
+  z-index: 100;
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+  justify-content: center;
+  background-color: rgba(255, 255, 255, 0.95);
+  padding: 12px;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
-
-button {
-    padding: 10px 20px;
-    font-size: 14px;
-    font-weight: bold;
-    cursor: pointer;
-    background-color: #2b579a; /* Azul NOX */
-    color: white;
-    border: none;
-    border-radius: 5px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    transition: background 0.3s;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-button:hover {
-    background-color: #1e3f70;
-}
-
-button.secondary {
-    background-color: #6c757d;
-}
-
-button.secondary:hover {
-    background-color: #5a6268;
-}
-
-/* Toolbar de Formatação */
 .toolbar {
-    display: flex;
-    gap: 5px;
-    margin-right: 20px;
-    border-right: 1px solid #ccc;
-    padding-right: 20px;
+  display: flex;
+  gap: 5px;
+  border-right: 1px solid #ccc;
+  padding-right: 15px;
+  align-items: center;
 }
-
+button {
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: bold;
+  cursor: pointer;
+  background-color: var(--nox-blue-dark);
+  color: white;
+  border: none;
+  border-radius: 5px;
+  transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-body);
+}
+button:hover {
+  background-color: #002bb3;
+}
+button.secondary {
+  background-color: #6c757d;
+}
+button.secondary:hover {
+  background-color: #5a6268;
+}
 .toolbar button {
-    padding: 8px;
-    background-color: #f8f9fa;
-    color: #333;
-    box-shadow: none;
-    border: 1px solid #ddd;
+  background-color: #f8f9fa;
+  color: #333;
+  border: 1px solid #ddd;
+  padding: 8px 12px;
 }
-
 .toolbar button:hover {
-    background-color: #e2e6ea;
+  background-color: #e2e6ea;
 }
-
 .toolbar button.active {
-    background-color: #dbeafe;
-    border-color: #2b579a;
-    color: #2b579a;
+  background-color: #dbeafe;
+  border-color: var(--nox-blue-dark);
+  color: var(--nox-blue-dark);
+}
+.template-selector {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-left: 1px solid #ccc;
+  padding-left: 15px;
+}
+select {
+  padding: 7px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-family: var(--font-body);
 }
 
-/* Formato Folha A4 */
+/* ========================================================
+   ESPAÇO PARA A LOGO (FIXO)
+   ======================================================== */
+.logo-container {
+  width: 100%;
+  max-width: 260px;
+  height: 80px;
+  position: relative;
+  cursor: default;
+  border: none;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: transparent;
+  transition: none;
+  overflow: hidden;
+}
+.logo-container:hover {
+  background-color: transparent;
+}
+.logo-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 2;
+  background-color: transparent;
+  display: block;
+}
+.logo-container img.loaded {
+  display: block;
+}
+.logo-placeholder-text {
+  display: none;
+}
+
+/* ========================================================
+   LAYOUT DA FOLHA A4 (CÓPIA FIEL DOS PRINTS)
+   ======================================================== */
 .page {
-    width: 210mm;
-    min-height: 297mm;
-    background: white;
-    margin-bottom: 20px;
-    box-shadow: 0 0 10px rgba(0,0,0,0.5);
-    padding: 20mm;
-    box-sizing: border-box;
-    position: relative;
+  width: 210mm;
+  min-height: 297mm;
+  background: white;
+  margin-bottom: 20px;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.4);
+  padding: 10mm 15mm; /* Margens exatas do original */
+  box-sizing: border-box;
+  position: relative;
+  font-size: 10.5pt; /* Fonte base */
+  line-height: 1.15;
 }
 
-/* Responsividade para ecrãs menores (escala a folha A4) */
-@media screen and (max-width: 220mm) {
-    .page {
-        width: 100%;
-        min-height: auto;
-        padding: 10mm;
-    }
-    
-    .controls {
-        flex-direction: column;
-        align-items: center;
-    }
-    
-    .toolbar {
-        margin-right: 0;
-        border-right: none;
-        border-bottom: 1px solid #ccc;
-        padding-right: 0;
-        padding-bottom: 10px;
-        margin-bottom: 10px;
-        width: 100%;
-        justify-content: center;
-    }
-}
-
-/* Cabeçalho */
+/* CABEÇALHO (Logo Esquerda, Info Direita) */
 .header {
-    display: flex;
-    justify-content: space-between;
-    border-bottom: 2px solid #2b579a;
-    padding-bottom: 15px;
-    margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 8px;
 }
 
-.logo {
-    display: flex;
-    align-items: center;
+.header-info {
+  text-align: right;
+  margin-bottom: 60px;
 }
-.logo img { 
-    height: 50px; /* Ajustado para consistência */
-    object-fit: contain;
+.ficha-title {
+  font-family: var(--font-ficha);
+  font-size: 38pt;
+  font-weight: 800;
+  letter-spacing: -1px;
+  margin: 0 0 -2px 0;
+  line-height: 1;
+}
+.ficha-title .cyan {
+  color: var(--nox-cyan);
+  font-weight: 500;
+}
+.ficha-title .blue {
+  color: var(--nox-cyan-dark);
 }
 
 .company-info {
-    text-align: right;
-    font-size: 10px;
-    color: #555;
-    line-height: 1.3;
+  font-size: 8.5pt;
+  line-height: 1.2;
+  color: #000;
 }
 
-/* Títulos e Secções */
-.product-title {
-    text-align: center;
-    font-size: 22px;
-    font-weight: bold;
-    color: #333;
-    margin: 20px 0;
+/* FAIXA DO NOME DO PRODUTO (Pílula Preenchida) */
+div.product-bar {
+  background-color: var(--nox-blue-dark);
+  color: white;
+  font-family: var(--font-section);
+  font-size: 14pt;
+  font-style: italic;
+  font-weight: bold;
+  padding: 3px 15px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  margin-bottom: 15px;
+  display: block;
 }
 
+/* TÍTULOS DE SEÇÃO (Pílula Vazada) */
+.section-wrapper {
+  margin-top: 15px;
+  margin-bottom: 5px;
+}
 .section-title {
-    background-color: #f0f0f0;
-    padding: 5px 10px;
-    font-weight: bold;
-    text-transform: uppercase;
-    font-size: 13px;
-    border-left: 5px solid #f26522; /* Laranja NOX */
-    margin-top: 20px;
-    margin-bottom: 10px;
-    color: #333;
+  display: inline-block;
+  font-family: var(--font-section);
+  color: var(--nox-blue-dark);
+  border: 2px solid var(--nox-blue-dark);
+  border-radius: 20px;
+  padding: 1px 12px;
+  font-size: 11.5pt;
+  font-weight: bold;
+  text-transform: uppercase;
 }
 
-/* Áreas Editáveis */
-.editable {
-    font-size: 12px;
-    color: #333;
-    line-height: 1.5;
-    outline: none;
-    min-height: 20px;
-    padding: 4px;
-    border: 1px solid transparent;
-    transition: all 0.2s;
+/* CAIXA DE NOTA AZUL */
+.blue-note-box {
+  background-color: var(--nox-note-blue);
+  color: white;
+  border-radius: 10px;
+  padding: 12px 20px;
+  text-align: center;
+  font-size: 9.5pt;
+  margin: 10px 0;
+  line-height: 1.3;
 }
 
-.editable:hover {
-    background-color: #fcfce0; /* Amarelinho para indicar que é editável */
-    border: 1px dashed #ccc;
-    border-radius: 4px;
+/* ÍCONES LARANJAS (Cópia fiel: Quadrado, Laranja Vivo, Sombra Dura) */
+.icon-row {
+  display: flex;
+  gap: 15px;
+  margin-top: 5px;
+  margin-bottom: 5px;
+  align-items: flex-start;
+}
+.icon-box {
+  width: 65px;
+  height: 65px;
+  background-color: var(--nox-orange);
+  border: 1px solid #e65500;
+  box-shadow: 4px 4px 6px rgba(0, 0, 0, 0.45); /* A sombra escura característica */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+}
+.icon-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.icon-text-content {
+  flex-grow: 1;
+  padding-top: 0px;
 }
 
-.editable:focus {
-    background-color: #fff;
-    border: 1px solid #2b579a;
-    border-radius: 4px;
-}
-
+/* FORMATAÇÃO DE TEXTO E TABELAS */
 table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 12px;
-    margin-top: 10px;
-    margin-bottom: 10px;
+  width: 100%;
+  border-collapse: collapse;
+  margin: 2px 0;
+  font-size: 10.5pt;
+}
+th,
+td {
+  padding: 1px 5px;
+  text-align: left;
+  vertical-align: top;
+  border: none;
+}
+ul {
+  margin: 2px 0;
+  padding-left: 20px;
+}
+li {
+  margin-bottom: 0px;
+}
+p {
+  margin: 0 0 5px 0;
 }
 
-th, td {
-    border: 1px solid #ccc;
-    padding: 6px;
-    text-align: left;
+.editable {
+  outline: none;
+  min-height: 15px;
+  padding: 2px;
+  border: 1px solid transparent;
+  border-radius: 3px;
+}
+.editable:hover {
+  border: 1px dashed #ccc;
+  background-color: #fafafa;
+  color: #333;
+}
+.editable:focus {
+  border: 1px solid var(--nox-cyan);
+  background-color: white;
 }
 
-th {
-    background-color: #f9f9f9;
-    font-weight: bold;
+/* MODAL */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+.modal-overlay.active {
+  opacity: 1;
+  pointer-events: all;
+}
+.modal {
+  background: white;
+  padding: 25px;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.form-group label {
+  font-weight: bold;
+  font-size: 12px;
+  color: #555;
+  font-family: var(--font-body);
+}
+.form-group input {
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  font-family: var(--font-body);
+}
+.doc-logo-img {
+  width: 240px;
+  height: 100%;
+  object-fit: contain;
 }
 
-/* Helper classes */
-.hidden {
-    display: none !important;
-}
-
-/* Regras de Impressão / Geração de PDF */
+/* ========================================================
+   REGRAS DE IMPRESSÃO (PDF EXPORT FIX)
+   ======================================================== */
 @media print {
-    body {
-        background-color: white;
-        padding: 0;
-    }
-    .controls {
-        display: none; /* Esconde o botão na hora de imprimir */
-    }
-    .page {
-        box-shadow: none;
-        margin: 0;
-        width: 210mm;
-        height: 297mm;
-        page-break-after: always; /* Garante que cada div .page seja uma folha separada */
-        padding: 15mm 20mm;
-    }
-    .editable:hover, .editable:focus {
-        background-color: transparent;
-        border: 1px solid transparent;
-    }
+  /* Força a impressão exata das cores (Chrome/Edge/Safari) */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  body {
+    background-color: white;
+    padding: 0;
+  }
+  .controls,
+  .no-print {
+    display: none !important;
+  }
+  .page {
+    box-shadow: none;
+    margin: 0;
+    padding: 10mm 15mm;
+    page-break-after: always;
+  }
+
+  /* Remover TODAS as bordas transparentes para evitar bugs de linha preta no Chrome */
+  .editable,
+  .editable:hover,
+  .editable:focus {
+    border: none !important;
+    outline: none !important;
+    background-color: transparent !important;
+  }
+
+  .logo-container,
+  .logo,
+  .doc-logo-img {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    background-color: transparent !important;
+    resize: none !important;
+  }
+
+  .logo-placeholder-text {
+    display: none !important;
+  }
+
+  /* CORREÇÃO DOS RISCOS PRETOS NOS ÍCONES */
+  .icon-box {
+    /* Remover a sombra corrige 99% dos problemas de artefatos pretos em SVGs transparentes na conversão pra PDF */
+    box-shadow: none !important;
+    border: 1px solid #e65500 !important;
+    background-color: var(--nox-orange) !important;
+  }
+  .icon-box img {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+  }
 }
