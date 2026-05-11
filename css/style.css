@@ -381,6 +381,13 @@ p {
 /* ========================================================
    REGRAS DE IMPRESSÃO (PDF EXPORT FIX)
    ======================================================== */
+
+/* @page padrão para o Boletim Técnico (ficha-emergencia.css sobrescreve com margin:0) */
+@page {
+  size: A4 portrait;
+  margin: 12mm 15mm;
+}
+
 @media print {
   /* Força a impressão exata das cores (Chrome/Edge/Safari) */
   * {
@@ -388,22 +395,37 @@ p {
     print-color-adjust: exact !important;
   }
 
-  body {
-    background-color: white;
+  html, body {
+    margin: 0;
     padding: 0;
+    background-color: white;
   }
+
   .controls,
-  .no-print {
+  .no-print,
+  #ai-modal {
     display: none !important;
   }
+
+  #pages-container {
+    margin: 0;
+    padding: 0;
+  }
+
   .page {
     box-shadow: none;
     margin: 0;
-    padding: 10mm 15mm;
+    padding: 0;
+    break-after: page;
     page-break-after: always;
   }
 
-  /* Remover TODAS as bordas transparentes para evitar bugs de linha preta no Chrome */
+  .page:last-child {
+    break-after: auto;
+    page-break-after: auto;
+  }
+
+  /* Remover bordas transparentes para evitar linha preta no Chrome */
   .editable,
   .editable:hover,
   .editable:focus {
@@ -426,9 +448,8 @@ p {
     display: none !important;
   }
 
-  /* CORREÇÃO DOS RISCOS PRETOS NOS ÍCONES */
+  /* Correção de artefatos pretos nos ícones SVG */
   .icon-box {
-    /* Remover a sombra corrige 99% dos problemas de artefatos pretos em SVGs transparentes na conversão pra PDF */
     box-shadow: none !important;
     border: 1px solid #e65500 !important;
     background-color: var(--nox-orange) !important;

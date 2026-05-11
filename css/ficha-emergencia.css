@@ -453,27 +453,74 @@ body.doc-emergency {
 
 .btn-doc-link:hover { background-color: #0028b3; color: white; }
 
-/* ── IMPRESSÃO ───────────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════
+   IMPRESSÃO — FICHA DE EMERGÊNCIA
+   @page aqui sobrescreve o margin:12mm do style.css, zerando
+   as margens do browser para que cada .page-emergency ocupe
+   exatamente 210×297 mm sem transbordamento.
+   ══════════════════════════════════════════════════════════════ */
+@page {
+    size: A4 portrait;
+    margin: 0;
+}
+
 @media print {
-    body.doc-emergency { background: white; }
+    html, body.doc-emergency {
+        margin: 0;
+        padding: 0;
+        background: white;
+    }
+
+    /* Esconde tudo que não é documento */
+    .controls,
+    .no-print,
+    #ai-modal-emergency {
+        display: none !important;
+    }
+
+    #pages-container {
+        margin: 0;
+        padding: 0;
+    }
 
     .page-emergency {
-        border: 6px solid var(--nox-blue-dark, #003df5);
-        border-bottom-color: var(--nox-orange, #ff5e00);
-        border-right-color: #7030d6;
-        border-left-color: #7030d6;
-        border-radius: 12px;
-        background: white !important;
+        /* Dimensões exatas A4 — border-box inclui a borda no cálculo */
+        width: 210mm;
         height: 297mm;
+        box-sizing: border-box;
+        overflow: hidden;
+
+        /* Borda 4 lados coloridos (fallback do gradiente de tela) */
+        border-width: 5px;
+        border-style: solid;
+        border-color: var(--nox-blue-dark, #003df5)   /* topo  */
+                      #7030d6                          /* dir   */
+                      var(--nox-orange, #ff5e00)       /* baixo */
+                      #7030d6;                         /* esq   */
+        border-radius: 10px;
+
+        background: white !important;
         padding: 10mm 13mm 8mm;
         display: flex;
         flex-direction: column;
+
+        /* Quebra de página */
+        break-after: page;
         page-break-after: always;
+        break-inside: avoid;
+        page-break-inside: avoid;
+
         box-shadow: none;
         margin: 0;
     }
 
-    /* Forçar cores em impressão */
+    /* Evita folha em branco após a última página */
+    .page-emergency:last-child {
+        break-after: auto;
+        page-break-after: auto;
+    }
+
+    /* Garantir cores em impressão */
     .page-emergency .section-title,
     .danger-banner,
     .nat-phone-item,
@@ -482,6 +529,8 @@ body.doc-emergency {
     .emergency-table th,
     .phone-table tbody tr:nth-child(even) td,
     .hazard-item,
+    .hazard-svg,
+    .banner-icon-svg,
     .icon-box {
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
