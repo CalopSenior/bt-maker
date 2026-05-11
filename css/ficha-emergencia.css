@@ -49,6 +49,9 @@ body.doc-emergency {
 
 /* ── BANNER DE PERIGO ──────────────────────────────────────── */
 .danger-banner {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     background: linear-gradient(135deg, #9b1d1d 0%, #d63031 100%);
     color: white;
     font-family: var(--font-section, 'Jost', sans-serif);
@@ -60,6 +63,14 @@ body.doc-emergency {
     margin-bottom: 10px;
     letter-spacing: 0.4px;
     line-height: 1.4;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+}
+
+.danger-banner .banner-icon-svg {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
 }
@@ -343,6 +354,82 @@ body.doc-emergency {
     padding-top: 3px;
     border-top: 1px solid #eee;
     font-style: italic;
+}
+
+/* ── ÍCONES DE BOTÃO ─────────────────────────────────────────── */
+.btn-icon-svg {
+    width: 15px;
+    height: 15px;
+    vertical-align: middle;
+    display: inline-block;
+    position: relative;
+    top: -1px;
+}
+
+.btn-icon-invert {
+    filter: brightness(0) invert(1);
+}
+
+/* ── ÍCONES DA GRADE DE PERIGOS ──────────────────────────────── */
+.hazard-svg {
+    width: 34px;
+    height: 34px;
+    margin-bottom: 2px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+}
+
+/* ── LISTA DE ARQUIVOS DO MODAL DE IA ────────────────────────── */
+.em-file-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: 8px;
+    min-height: 10px;
+}
+
+.em-file-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #f0f4ff;
+    border: 1px solid #c5d0e6;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 12px;
+    font-family: var(--font-body, 'Nunito', sans-serif);
+}
+
+.em-file-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+    color: #333;
+    margin-right: 6px;
+}
+
+.em-file-remove {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 2px 4px;
+    display: flex;
+    align-items: center;
+    border-radius: 3px;
+    flex-shrink: 0;
+    transition: background 0.15s;
+}
+
+.em-file-remove:hover { background: #fee2e2; }
+
+.em-file-remove .btn-icon-svg {
+    width: 14px;
+    height: 14px;
+    filter: none;
 }
 
 /* ── LINK-BOTÃO PARA TROCA DE DOCUMENTO ─────────────────────── */

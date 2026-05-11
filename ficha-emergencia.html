@@ -45,12 +45,29 @@
 
         <div class="actions" style="display:flex;gap:8px;align-items:center;">
             <a href="index.html" class="btn-doc-link" title="Voltar ao Boletim Técnico">
-                📋 Boletim Técnico
+                <img src="assets/icon-back.svg" class="btn-icon-svg btn-icon-invert" alt="">
+                Boletim Técnico
             </a>
-            <button id="btn-save-project" class="secondary" title="Salvar Projeto (JSON)">💾 Salvar</button>
-            <button id="btn-load-project" class="secondary" title="Carregar Projeto (JSON)">📂 Abrir</button>
+            <button id="btn-save-project" class="secondary" title="Salvar Projeto (JSON)">
+                <img src="assets/icon-save.svg" class="btn-icon-svg" alt="">
+                Salvar
+            </button>
+            <button id="btn-load-project" class="secondary" title="Carregar Projeto (JSON)">
+                <img src="assets/icon-open.svg" class="btn-icon-svg" alt="">
+                Abrir
+            </button>
             <input type="file" id="file-input" style="display:none;" accept=".json">
-            <button onclick="window.print()" title="Imprimir / Gerar PDF">🖨️ Imprimir PDF</button>
+            <button id="btn-emergency-ai" title="Preencher com IA (até 5 PDFs)"
+                style="background-color:#c0392b;font-weight:bold;">
+                <img src="assets/icon-ai.svg" class="btn-icon-svg btn-icon-invert" alt="">
+                Preencher com IA
+            </button>
+            <input type="file" id="file-input-emergency-pdf" style="display:none;" accept=".pdf" multiple>
+            <button onclick="window.print()" title="Imprimir / Gerar PDF"
+                style="background-color:var(--nox-blue-dark,#003df5);color:white;">
+                <img src="assets/icon-print.svg" class="btn-icon-svg btn-icon-invert" alt="">
+                Imprimir PDF
+            </button>
         </div>
     </div>
 
@@ -80,8 +97,9 @@
             </div>
 
             <!-- Faixa vermelha de alerta -->
-            <div class="danger-banner editable" contenteditable="true">
-                ⚠ &nbsp;PRODUTO PERIGOSO — INFORMAÇÕES DE EMERGÊNCIA PARA TRANSPORTE RODOVIÁRIO, FERROVIÁRIO, HIDROVIÁRIO E AEROVIÁRIO
+            <div class="danger-banner">
+                <img src="assets/icon-warning.svg" class="banner-icon-svg" alt="">
+                <span class="editable" contenteditable="true">PRODUTO PERIGOSO — INFORMAÇÕES DE EMERGÊNCIA PARA TRANSPORTE RODOVIÁRIO, FERROVIÁRIO, HIDROVIÁRIO E AEROVIÁRIO</span>
             </div>
 
             <!-- Barra de produto (pill azul igual ao BT) -->
@@ -186,25 +204,25 @@
                 <div class="section-title">Identificação dos Perigos (GHS / Sistema Harmonizado Global)</div>
             </div>
             <div class="hazard-grid">
-                <div class="hazard-item editable" contenteditable="true" data-ai-field="hazard_health">
-                    <div class="hazard-icon">⚕</div>
+                <div class="hazard-item" data-ai-field="hazard_health">
+                    <img src="assets/icon-health.svg" class="hazard-svg" alt="Saúde">
                     <div class="hazard-label">Saúde</div>
-                    <div class="hazard-level">Nível ___</div>
+                    <div class="hazard-level editable" contenteditable="true">Nível ___</div>
                 </div>
-                <div class="hazard-item editable" contenteditable="true" data-ai-field="hazard_fire">
-                    <div class="hazard-icon">🔥</div>
+                <div class="hazard-item" data-ai-field="hazard_fire">
+                    <img src="assets/icon-fire-hazard.svg" class="hazard-svg" alt="Inflamabilidade">
                     <div class="hazard-label">Inflamabilidade</div>
-                    <div class="hazard-level">Nível ___</div>
+                    <div class="hazard-level editable" contenteditable="true">Nível ___</div>
                 </div>
-                <div class="hazard-item editable" contenteditable="true" data-ai-field="hazard_reactivity">
-                    <div class="hazard-icon">⚡</div>
+                <div class="hazard-item" data-ai-field="hazard_reactivity">
+                    <img src="assets/icon-reactivity.svg" class="hazard-svg" alt="Reatividade">
                     <div class="hazard-label">Reatividade</div>
-                    <div class="hazard-level">Nível ___</div>
+                    <div class="hazard-level editable" contenteditable="true">Nível ___</div>
                 </div>
-                <div class="hazard-item editable" contenteditable="true" data-ai-field="hazard_env">
-                    <div class="hazard-icon">🌿</div>
+                <div class="hazard-item" data-ai-field="hazard_env">
+                    <img src="assets/icon-env.svg" class="hazard-svg" alt="Meio Ambiente">
                     <div class="hazard-label">Meio Ambiente</div>
-                    <div class="hazard-level">Nível ___</div>
+                    <div class="hazard-level editable" contenteditable="true">Nível ___</div>
                 </div>
             </div>
 
@@ -648,12 +666,66 @@
 
     </div><!-- /pages-container -->
 
-    <!-- ══════════ JS INLINE — Ficha de Emergência ══════════
-         Não usa o main.js do BT (PageBuilder/AIManager são incompatíveis).
-         Apenas editor de texto, salvar/carregar JSON e upload de logo.
-         ═══════════════════════════════════════════════════════ -->
+
+    <!-- ══════════ MODAL IA — FICHA DE EMERGÊNCIA ══════════ -->
+    <div id="ai-modal-emergency" class="modal-overlay">
+        <div class="modal" style="max-width:600px;max-height:90vh;overflow-y:auto;">
+            <h3>Preenchimento por IA — Ficha de Emergência</h3>
+            <p style="font-size:12px;color:#666;margin-bottom:12px;">
+                Adicione até 5 arquivos PDF (FISPQ, ficha técnica, laudo) como fonte de informação.
+                A IA extrairá os dados e preencherá automaticamente todos os campos da ficha.
+            </p>
+
+            <div class="form-group">
+                <label style="display:flex;align-items:center;gap:8px;">
+                    Arquivos PDF
+                    <span id="em-file-counter" style="color:#888;font-size:11px;font-weight:normal;">0/5 arquivo(s)</span>
+                </label>
+                <button id="btn-add-emergency-files" style="font-size:11px;padding:5px 10px;margin-top:5px;">
+                    <img src="assets/icon-open.svg" class="btn-icon-svg btn-icon-invert" alt="">
+                    Adicionar PDFs
+                </button>
+                <div id="em-file-list" class="em-file-list"></div>
+            </div>
+
+            <div class="form-group" style="margin-top:12px;">
+                <label for="em-ai-model-select">Modelo de Processamento:</label>
+                <select id="em-ai-model-select">
+                    <option value="gemini-2.5-flash-preview-09-2025" selected>Gemini 2.5 Flash Preview (Recomendado)</option>
+                    <option value="gemini-3-flash-preview">Gemini 3 Flash Preview</option>
+                    <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+                    <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+                </select>
+            </div>
+
+            <div class="form-group" style="margin-top:10px;">
+                <label for="em-ai-product-name">Nome do Produto (Opcional):</label>
+                <input type="text" id="em-ai-product-name" placeholder="Deixe em branco para a IA detectar no PDF">
+            </div>
+
+            <div class="form-group" style="margin-top:10px;">
+                <label for="em-ai-extra-instructions">Instruções Adicionais (Opcional):</label>
+                <textarea id="em-ai-extra-instructions" rows="3"
+                    placeholder="Ex: Produto para transporte internacional. Use terminologia IMDG."
+                    style="padding:8px;border:1px solid #ddd;border-radius:4px;font-family:inherit;font-size:13px;resize:vertical;width:100%;box-sizing:border-box;"></textarea>
+            </div>
+
+            <div class="modal-actions" style="margin-top:20px;">
+                <button id="btn-cancel-emergency-ai" class="btn-cancel">Cancelar</button>
+                <button id="btn-confirm-emergency-ai" style="background-color:#c0392b;color:white;font-weight:bold;">
+                    <img src="assets/icon-ai.svg" class="btn-icon-svg btn-icon-invert" alt="">
+                    Preencher Ficha
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ══════════ JS — Ficha de Emergência ══════════ -->
     <script type="module">
-        // ── Upload de logo (mesmo comportamento do BT) ──────────
+        import { EmergencyAI } from './js/emergency-ai.js';
+
+        // ── Upload de logo ──────────────────────────────────────
         document.getElementById('global-logo-upload')?.addEventListener('change', function (e) {
             const file = e.target.files[0];
             if (!file) return;
@@ -725,6 +797,9 @@
             reader.readAsText(file);
             e.target.value = '';
         });
+
+        // ── Módulo de IA ───────────────────────────────────────
+        EmergencyAI.init();
     </script>
 
 </body>
