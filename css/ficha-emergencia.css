@@ -34,6 +34,31 @@ body.doc-emergency {
     border-image: linear-gradient(90deg, var(--nox-blue-dark, #003df5), var(--nox-orange, #ff5e00)) 1;
 }
 
+/* ── MARCA D'ÁGUA ────────────────────────────────────────────── */
+.page-emergency {
+    position: relative;
+    isolation: isolate;
+}
+
+.page-watermark {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 62%;
+    opacity: 0.055;
+    pointer-events: none;
+    z-index: 0;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+}
+
+/* Garante que todo o conteúdo fique acima da marca d'água */
+.page-emergency > *:not(.page-watermark) {
+    position: relative;
+    z-index: 1;
+}
+
 /* Bloco de título (substitui .header-info) */
 .emergency-header .header-info {
     margin-bottom: 0;
@@ -663,6 +688,14 @@ body.doc-emergency {
     .phone-table td {
         padding: 1.5px 4px;
         font-size: 7pt;
+    }
+
+    /* Marca d'água em impressão — opacidade ligeiramente maior
+       pois impressoras tendem a clarear tons muito baixos */
+    .page-watermark {
+        opacity: 0.07;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
     }
 
     /* ── Garantir cores em impressão ─────────────────────────── */
