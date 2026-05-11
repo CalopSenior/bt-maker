@@ -1,324 +1,198 @@
 <!DOCTYPE html>
 <html lang="pt-PT">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gerador de Boletim Técnico - NOX Cor</title>
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/logo.css">
-    <link rel="stylesheet" href="css/modal.css">
-    <!-- PDF.js para ler arquivos PDF -->
+
+    <!-- Dependências Externas -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script>
-        // Configurar worker do PDF.js
         if (window.pdfjsLib) {
             window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
         }
     </script>
-    <!-- Google Generative AI SDK -->
-    <script type="importmap">
-      {
-        "imports": {
-          "@google/generative-ai": "https://esm.run/@google/generative-ai"
-        }
-      }
-    </script>
+
+    <!-- GOOGLE FONTS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Jost:wght@700&family=Montserrat:wght@900&family=Nunito:wght@400;600;700&family=Titillium+Web:wght@600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- CSS EXTERNO SEPARADO -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/modal.css">
+    <link rel="stylesheet" href="css/logo.css">
 </head>
+
 <body>
 
+    <!-- Input Global Escondido para Upload da Logo -->
+    <input type="file" id="global-logo-upload" accept="image/*" style="display: none;">
+
+    <!-- BARRA DE CONTROLES SUPERIOR -->
     <div class="controls no-print">
-        <!-- Toolbar de Edição -->
         <div class="toolbar">
             <button data-command="bold" title="Negrito"><b>B</b></button>
             <button data-command="italic" title="Itálico"><i>I</i></button>
             <button data-command="underline" title="Sublinhado"><u>U</u></button>
             <button data-command="insertUnorderedList" title="Lista">●</button>
-            <button data-command="insertOrderedList" title="Lista Numerada">1.</button>
-            <button data-command="justifyLeft" title="Alinhar Esquerda">⇤</button>
-            <button data-command="justifyCenter" title="Centralizar">↔</button>
-            <button data-command="justifyRight" title="Alinhar Direita">⇥</button>
-            <button data-command="createLink" title="Link">🔗</button>
-            <select id="font-size-selector" title="Tamanho da Fonte" style="padding: 5px; border: 1px solid #ddd; border-radius: 4px;">
-                <option value="" disabled selected>Tamanho</option>
-                <option value="1">10px (Muito Pequeno)</option>
-                <option value="2">13px (Pequeno)</option>
-                <option value="3">16px (Normal)</option>
-                <option value="4">18px (Médio)</option>
-                <option value="5">24px (Grande)</option>
-                <option value="6">32px (Muito Grande)</option>
-                <option value="7">48px (Enorme)</option>
-            </select>
         </div>
 
-        <div class="actions" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+        <div class="template-selector">
+            <label style="font-size: 12px; font-weight: bold; font-family: var(--font-body);">Gerar Novo:</label>
+            <select id="template-type">
+                <option value="tinta">Tinta / Epóxi (3 Págs - Completo)</option>
+                <option value="thinner">Diluente / Thinner (1 Pág)</option>
+            </select>
+            <button id="btn-generate-template" style="background-color: var(--nox-orange);">Aplicar Molde</button>
+        </div>
+
+        <div style="width: 1px; height: 30px; background-color: #ccc; margin: 0 10px;"></div>
+
+        <div class="actions" style="display: flex; gap: 8px; align-items: center;">
             <a href="ficha-emergencia.html"
-               style="display:inline-flex;align-items:center;gap:6px;padding:10px 16px;font-size:13px;font-weight:bold;cursor:pointer;background-color:#c0392b;color:white;border:none;border-radius:5px;box-shadow:0 2px 4px rgba(0,0,0,.2);text-decoration:none;transition:background .3s;white-space:nowrap;"
-               title="Abrir Ficha de Emergência de Transporte">
+               style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;font-size:13px;font-weight:bold;background-color:#c0392b;color:white;border-radius:5px;text-decoration:none;font-family:var(--font-body);white-space:nowrap;transition:background .2s;"
+               title="Ficha de Emergência de Transporte">
                 🚨 Ficha de Emergência
             </a>
-
-            <button id="btn-save-project" class="secondary" title="Salvar Projeto (JSON)">
-                💾 Salvar
-            </button>
-            
-            <button id="btn-load-project" class="secondary" title="Carregar Projeto (JSON/DOC)">
-                📂 Abrir
-            </button>
+            <button id="btn-save-project" class="secondary" title="Salvar Projeto (JSON)">💾 Salvar</button>
+            <button id="btn-load-project" class="secondary" title="Carregar Projeto">📂 Abrir</button>
             <input type="file" id="file-input" style="display: none;" accept=".json,.doc,.html">
-
-            <button id="btn-import-text" class="secondary" title="Importar Apenas Texto (Mantém Header)">
-                📝 Imp. Texto
-            </button>
-            <input type="file" id="file-input-text" style="display: none;" accept=".doc,.html">
-
-            <button id="btn-ai-fill" class="secondary" title="Preencher com IA (Gemini)" style="background-color: #673ab7;">
-                ✨ Preencher c/ IA
-            </button>
+            <button id="btn-ai-fill" class="secondary" title="Preencher com IA Avançada"
+                style="background-color: #673ab7; font-weight: bold;">✨ Extração IA Profunda</button>
             <input type="file" id="file-input-pdf" style="display: none;" accept=".pdf">
-
-            <button id="btn-add-page" class="secondary" title="Adicionar Página">
-                + Pág
-            </button>
-
-            <button id="btn-remove-page" class="secondary" style="background-color: #dc3545;" title="Remover Última Página">
-                - Pág
-            </button>
-
-            <button onclick="window.print()" title="Imprimir / PDF">
-                🖨️ PDF
-            </button>
-            
-            <button id="btn-export-word" style="background-color: #005A9E;" title="Exportar para Word">
-                Word
-            </button>
+            <button onclick="window.print()" title="Imprimir / Gerar PDF Real">🖨️ Imprimir PDF</button>
         </div>
     </div>
 
-    <div id="pages-container">
-        <!-- PÁGINA 1 -->
-        <div class="page" id="page1">
+    <!-- CONTAINER DAS PÁGINAS -->
+    <div id="pages-container"></div>
 
-            <div class="header">
-                <div class="logo"><img src="assets/logo.png" alt="NOX Cor"></div>
-                <div class="company-info editable" contenteditable="true">
-                    <strong>FICHA TÉCNICA</strong><br>
-                    Kromo Industria e Comércio de Tintas LTDA<br>
-                    Rua: Nílton Penna Botelho, nº 4111 Pinheiral-RJ<br>
-                    CEP: 27197-000 | Tel: (24) 3016 4937<br>
-                    www.noxcor.com.br - sac@noxcor.com.br
+    <!-- REPOSITÓRIO DE TEMPLATES ATÔMICOS (Oculto - Usado pelo PageBuilder) -->
+    <div id="templates-repository" style="display: none;">
+
+        <!-- Base de Página A4 -->
+        <template id="tpl-page-base">
+            <div class="page">
+                <div class="header">
+                    <img class="doc-logo-img" src="assets/logo.svg" alt="Logo NOX Cor">
+                    <div class="header-info">
+                        <div class="ficha-title"><span class="cyan">FICHA</span> <span class="blue">TÉCNICA</span></div>
+                        <div class="company-info editable" contenteditable="true">
+                            <strong>Kromo Industria e Comércio de Tintas LTDA</strong><br>
+                            Rua: Nílton Penna Botelho, nº 4111 - Pinheiral-RJ<br>
+                            CEP: 27197-000 | Telefone: (24) 3016 4937<br>
+                            www.noxcor.com.br - sac@noxcor.com.br
+                        </div>
+                    </div>
+                </div>
+                <div class="product-bar editable" contenteditable="true" data-ai-field="product_title">NOME DO PRODUTO
+                </div>
+                <div class="page-content" style="display: flex; flex-direction: column; gap: 0px;"></div>
+            </div>
+        </template>
+
+        <!-- Bloco de Texto Simples -->
+        <template id="tpl-block-text">
+            <div class="section-block" style="margin-bottom: 5px;">
+                <div class="section-wrapper">
+                    <div class="section-title"></div>
+                </div>
+                <div class="editable section-body" contenteditable="true" style="padding-left: 10px; min-height: 20px;">
+                </div>
+            </div>
+        </template>
+
+        <!-- Bloco com Ícone -->
+        <template id="tpl-block-icon">
+            <div class="section-block" style="margin-bottom: 5px;">
+                <div class="section-wrapper">
+                    <div class="section-title"></div>
+                </div>
+                <div class="icon-row">
+                    <div class="icon-box"><img src="" alt="Icon" /></div>
+                    <div class="icon-text-content editable section-body" contenteditable="true"
+                        style="min-height: 40px; padding-top: 5px;"></div>
+                </div>
+            </div>
+        </template>
+
+        <!-- Bloco de Aplicação Específico (Vazio para receber tabelas da IA) -->
+        <template id="tpl-block-application">
+            <div class="section-block" style="margin-bottom: 5px;">
+                <div class="section-wrapper">
+                    <div class="section-title">APLICAÇÃO</div>
+                </div>
+                <div class="editable section-body" contenteditable="true"
+                    style="display: flex; flex-direction: column; gap: 15px;"></div>
+            </div>
+        </template>
+
+    </div>
+
+    <!-- MODAL IA ATUALIZADO (Totalmente Dinâmico) -->
+    <div id="ai-modal" class="modal-overlay">
+        <div class="modal" style="max-width: 650px; max-height: 90vh; overflow-y: auto;">
+            <h3>Extração Dinâmica de PDF</h3>
+            <p style="font-size: 12px; color: #666; margin-bottom: 10px;">Selecione os campos que a IA deve buscar e
+                gerar para montar a sua ficha.</p>
+
+            <div class="form-group">
+                <label for="ai-model-select">Modelo de Processamento:</label>
+                <select id="ai-model-select">
+                    <option value="gemini-3-flash-preview" selected>Gemini 3 Flash Preview (Recomendado/Mais Avançado)
+                    </option>
+                    <option value="gemini-2.5-flash-preview-09-2025">Gemini 2.5 Flash Preview</option>
+                    <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+                    <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+                </select>
+            </div>
+
+            <div class="form-group" style="margin-top: 10px;">
+                <label>Campos a Extrair (Construção da Página):</label>
+
+                <!-- Botões de Predefinição -->
+                <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                    <button id="preset-tinta" style="font-size: 10px; padding: 4px 8px;">Predefinição: Tinta</button>
+                    <button id="preset-thinner" style="font-size: 10px; padding: 4px 8px;">Predefinição:
+                        Thinner</button>
+                    <button id="preset-clear" class="secondary" style="font-size: 10px; padding: 4px 8px;">Limpar
+                        Tudo</button>
+                </div>
+
+                <!-- Container onde o JS vai renderizar os Checkboxes Múltiplos -->
+                <div id="ai-fields-container"
+                    style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; background: #f9f9f9; padding: 10px; border: 1px solid #ddd; border-radius: 4px; max-height: 150px; overflow-y: auto;">
+                    <!-- Renderizado pelo ai-manager.js -->
                 </div>
             </div>
 
-            <div class="product-title editable" contenteditable="true" data-ai-field="product_title">
-                NOXSEAL N2198
+            <div class="form-group" style="margin-top: 10px;">
+                <label for="ai-product-name">Forçar Nome do Produto (Opcional):</label>
+                <input type="text" id="ai-product-name" placeholder="Deixe em branco para a IA detectar no PDF">
             </div>
 
-            <div class="section-title">DESCRIÇÃO DO PRODUTO</div>
-            <div class="editable" contenteditable="true" data-ai-field="description">
-                Tinta epóxi isocianato... [Clique aqui para digitar a descrição completa do produto]
+            <div class="form-group" style="margin-top: 10px;">
+                <label for="ai-extra-instructions">Instruções Extras para a IA (Opcional):</label>
+                <textarea id="ai-extra-instructions" rows="3"
+                    placeholder="Ex: Substitua a marca X pela marca Y em todos os textos. Formate os rendimentos em negrito."
+                    style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-family: inherit; font-size: 13px; resize: vertical;"></textarea>
             </div>
 
-            <div class="section-title">USOS RECOMENDADOS</div>
-            <div class="editable" contenteditable="true" data-ai-field="uses">
-                [Descreva aqui os ambientes recomendados, exposição, substratos, etc.]
-            </div>
-
-            <div class="section-title">CERTIFICAÇÕES E APROVAÇÃO</div>
-            <div class="editable" contenteditable="true" data-ai-field="certifications">
-                Atende norma 2198. [Adicionar outras certificações, se houver]
-            </div>
-
-            <div class="section-title">EMBALAGENS</div>
-            <div class="editable" contenteditable="true" data-ai-field="packaging">
-                <table>
-                    <tr>
-                        <th>Componente</th>
-                        <th>Conteúdo</th>
-                        <th>Embalagem</th>
-                        <th>Unidade</th>
-                    </tr>
-                    <tr>
-                        <td>Componente A</td>
-                        <td>[0,0]</td>
-                        <td>[0,0]</td>
-                        <td>L</td>
-                    </tr>
-                    <tr>
-                        <td>Componente B</td>
-                        <td>[0,0]</td>
-                        <td>[0,0]</td>
-                        <td>L</td>
-                    </tr>
-                </table>
-            </div>
-
-            <div class="section-title">CARACTERÍSTICAS</div>
-            <div class="editable" contenteditable="true" data-ai-field="characteristics">
-                <strong>Cor:</strong> Cores diversas<br>
-                <strong>Brilho:</strong> [Inserir Brilho]<br>
-                <strong>Teor de VOC:</strong> [Inserir VOC]<br>
-                <strong>Sólidos por Volume:</strong> [Inserir %]<br>
-                <strong>Prazo de Validade:</strong> [Inserir meses]<br>
-                <strong>Espessura por demão (seca):</strong> [Inserir micrometros]<br>
-                <strong>Rendimento teórico:</strong> [Inserir m²/L]<br>
-                <strong>Resistência ao calor seco:</strong> [Inserir temperatura máxima]
-            </div>
-        </div>
-
-        <!-- PÁGINA 2 -->
-        <div class="page" id="page2">
-            <div class="header">
-                <div class="logo"><img src="assets/logo.png" alt="NOX Cor"></div>
-                <div class="company-info editable" contenteditable="true">
-                    <strong>FICHA TÉCNICA</strong><br>
-                    Kromo Industria e Comércio de Tintas LTDA<br>
-                    Telefone: (24) 3016 4937
-                </div>
-            </div>
-
-            <div class="section-title">SECAGEM E REPINTURA</div>
-            <div class="editable" contenteditable="true" data-ai-field="drying_repainting">
-                <table>
-                    <tr>
-                        <th>Secagem</th>
-                        <th>10°C</th>
-                        <th>25°C</th>
-                        <th>35°C</th>
-                    </tr>
-                    <tr>
-                        <td>Toque</td>
-                        <td>--</td>
-                        <td>--</td>
-                        <td>--</td>
-                    </tr>
-                    <tr>
-                        <td>Pressão</td>
-                        <td>--</td>
-                        <td>--</td>
-                        <td>--</td>
-                    </tr>
-                    <tr>
-                        <td>Final</td>
-                        <td>--</td>
-                        <td>--</td>
-                        <td>--</td>
-                    </tr>
-                </table>
-                <br>
-                <table>
-                    <tr>
-                        <th>Repintura</th>
-                        <th>10°C</th>
-                        <th>25°C</th>
-                        <th>35°C</th>
-                    </tr>
-                    <tr>
-                        <td>Mínimo</td>
-                        <td>--</td>
-                        <td>--</td>
-                        <td>--</td>
-                    </tr>
-                    <tr>
-                        <td>Máximo</td>
-                        <td>--</td>
-                        <td>--</td>
-                        <td>--</td>
-                    </tr>
-                </table>
-            </div>
-
-            <div class="section-title">PREPARAÇÃO DA SUPERFÍCIE</div>
-            <div class="editable" contenteditable="true" data-ai-field="surface_preparation">
-                O desempenho deste produto está associado ao grau de preparação da superfície.<br>
-                A superfície deverá estar limpa e isenta de quaisquer contaminantes... [Completar conforme instruções do laboratório]
-            </div>
-
-            <div class="section-title">PREPARAÇÃO PARA APLICAÇÃO</div>
-            <div class="editable" contenteditable="true" data-ai-field="application_preparation">
-                <strong>Mistura:</strong> Homogeneizar o conteúdo de cada um dos componentes...<br><br>
-                <strong>Relação de mistura (Volume):</strong> [ X A x Y B ]<br><br>
-                <strong>Diluente:</strong> [Nome do diluente]<br><br>
-                <strong>Diluição:</strong> [Porcentagem máxima]<br><br>
-                <strong>Vida útil da mistura (25°C):</strong> [Horas]<br><br>
-                <strong>Tempo de indução (25°C):</strong> [Minutos]
-            </div>
-        </div>
-
-        <!-- PÁGINA 3 -->
-        <div class="page" id="page3">
-            <div class="header">
-                <div class="logo"><img src="assets/logo.png" alt="NOX Cor"></div>
-                <div class="company-info editable" contenteditable="true">
-                    <strong>FICHA TÉCNICA</strong><br>
-                    Kromo Industria e Comércio de Tintas LTDA<br>
-                    Telefone: (24) 3016 4937
-                </div>
-            </div>
-
-            <div class="section-title">FORMAS DE APLICAÇÃO</div>
-            <div class="editable" contenteditable="true" data-ai-field="application_methods">
-                <strong>Pistola convencional:</strong><br>
-                - Pressão de atomização: [psi]<br>
-                - Diluição: [X%]<br><br>
-                
-                <strong>Pistola Airless:</strong><br>
-                - Pressão do fluido: [psi]<br>
-                - Diluição: [X%]<br><br>
-                
-                <strong>Trincha/Rolo:</strong><br>
-                [Descrever recomendação]
-            </div>
-
-            <div class="section-title">PRECAUÇÕES DE SEGURANÇA</div>
-            <div class="editable" contenteditable="true" data-ai-field="safety">
-                Líquidos e vapores inflamáveis. Pode ser nocivo se ingerido ou em contacto com a pele. Provoca queimadura severa à pele e dano aos olhos.<br>
-                <strong>EPIs:</strong> Use luvas de proteção (nitrilo), roupa de proteção, proteção ocular e proteção respiratória (filtro VO).<br>
-                <strong>Armazenamento:</strong> Armazene em local bem ventilado. Mantenha o recipiente hermeticamente fechado, afastado de calor e fontes de ignição.<br>
-                <strong>Primeiros Socorros:</strong> Em caso de contacto com a pele, retirar o produto com óleo vegetal e lavar com água abundante. Em caso de contacto com os olhos, lavar com água corrente por 15 minutos.<br>
-                <strong>Incêndio:</strong> Utilize espuma, pó químico, CO2 ou água em neblina. Não utilize jato de água.<br>
-                Leia atentamente todas as informações contidas na FISPQ/FDS deste produto.
-            </div>
-
-            <div class="section-title">NOTAS</div>
-            <div class="editable" contenteditable="true" data-ai-field="notes">
-                As informações contidas neste boletim técnico baseiam-se na experiência e no conhecimento adquirido em campo pela equipa técnica da NOXCOR.<br>
-                As informações contidas neste boletim técnico estão sujeitas a modificações periódicas, sem prévio aviso.
+            <div class="modal-actions" style="margin-top: 20px;">
+                <button id="btn-cancel-ai" class="btn-cancel">Cancelar</button>
+                <button id="btn-confirm-ai" style="background-color: #673ab7; color: white;">✨ Gerar Ficha
+                    Customizada</button>
             </div>
         </div>
     </div>
 
+    <!-- CARREGAMENTO DO FICHEIRO EXTERNO JAVASCRIPT -->
     <script type="module" src="js/main.js"></script>
 
-    <!-- Modal de Configuração da IA -->
-    <div id="ai-modal" class="modal-overlay">
-        <div class="modal">
-            <h3>Instruções para a IA</h3>
-            
-            <div class="form-group">
-                <label for="ai-product-name">Nome do Produto (Completo/Abreviado):</label>
-                <input type="text" id="ai-product-name" placeholder="Ex: NOXSEAL N2198 (N2198)">
-            </div>
-            
-            <div class="form-group">
-                <label for="ai-proportion">Proporção de Mistura:</label>
-                <input type="text" id="ai-proportion" placeholder="Ex: 3A x 1B (Volume) ou 'idem' para usar do PDF">
-            </div>
-            
-            <div class="form-group">
-                <label for="ai-related">Produtos Relacionados (Diluente/Catalisador):</label>
-                <input type="text" id="ai-related" placeholder="Ex: Catalisador N2198B, Diluente N001">
-            </div>
-
-            <div class="form-group">
-                <label for="ai-extra">Instruções Extras:</label>
-                <input type="text" id="ai-extra" placeholder="Ex: Traduzir para PT-BR, resumir descrição...">
-            </div>
-
-            <div class="modal-actions">
-                <button id="btn-cancel-ai" class="btn-cancel">Cancelar</button>
-                <button id="btn-confirm-ai" style="background-color: #673ab7;">✨ Processar</button>
-            </div>
-        </div>
-    </div>
 </body>
+
 </html>
