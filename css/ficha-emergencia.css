@@ -35,9 +35,16 @@ body.doc-emergency {
 }
 
 /* ── MARCA D'ÁGUA ────────────────────────────────────────────── */
+/*
+   Estratégia de empilhamento (stacking):
+   A .page-emergency tem position:relative.
+   A .page-watermark é position:absolute com z-index:0.
+   O .em-page-body (wrapper único de todo o conteúdo) tem
+   position:relative + z-index:1 → fica ACIMA da marca d'água.
+   Assim não é necessário tocar no z-index de cada elemento filho.
+*/
 .page-emergency {
     position: relative;
-    isolation: isolate;
 }
 
 .page-watermark {
@@ -46,17 +53,20 @@ body.doc-emergency {
     left: 50%;
     transform: translate(-50%, -50%);
     width: 62%;
-    opacity: 0.055;
+    opacity: 0.08;
     pointer-events: none;
     z-index: 0;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
 }
 
-/* Garante que todo o conteúdo fique acima da marca d'água */
-.page-emergency > *:not(.page-watermark) {
+.em-page-body {
     position: relative;
     z-index: 1;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
 }
 
 /* Bloco de título (substitui .header-info) */
@@ -550,8 +560,10 @@ body.doc-emergency {
     }
 
     /* CRUCIAL: impede o flexbox de comprimir os filhos.
-       Cada bloco ocupa seu tamanho natural — sem deformação. */
-    .page-emergency > * {
+       Cobre tanto a pág.1 (filhos diretos de .page-emergency)
+       quanto págs.2-4 (filhos de .em-page-body). */
+    .page-emergency > *,
+    .em-page-body > * {
         flex-shrink: 0;
     }
 
@@ -690,12 +702,28 @@ body.doc-emergency {
         font-size: 7pt;
     }
 
-    /* Marca d'água em impressão — opacidade ligeiramente maior
-       pois impressoras tendem a clarear tons muito baixos */
+    /* Marca d'água em impressão — opacidade mais alta que na tela
+       pois conversores PDF e impressoras clarificam tons baixos */
     .page-watermark {
-        opacity: 0.07;
+        display: block !important;
+        position: absolute !important;
+        top: 50% !important;
+        left: 50% !important;
+        transform: translate(-50%, -50%) !important;
+        width: 62% !important;
+        opacity: 0.13 !important;
+        pointer-events: none;
+        z-index: 0;
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
+    }
+
+    .em-page-body {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        flex-direction: column;
+        flex: 1;
     }
 
     /* ── Garantir cores em impressão ─────────────────────────── */
