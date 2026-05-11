@@ -455,9 +455,12 @@ body.doc-emergency {
 
 /* ══════════════════════════════════════════════════════════════
    IMPRESSÃO — FICHA DE EMERGÊNCIA
-   @page aqui sobrescreve o margin:12mm do style.css, zerando
-   as margens do browser para que cada .page-emergency ocupe
-   exatamente 210×297 mm sem transbordamento.
+   Estratégia: margin: 0 no @page + min-height (NÃO height fixo).
+   Com height fixo + flex, o browser comprime todos os filhos para
+   caber nos 297 mm — isso causa a deformação visual.
+   Com min-height + flex-shrink:0 nos filhos, cada bloco ocupa seu
+   espaço natural; se ultrapassar 297 mm o conteúdo flui para a
+   folha seguinte de forma legível.
    ══════════════════════════════════════════════════════════════ */
 @page {
     size: A4 portrait;
@@ -483,44 +486,186 @@ body.doc-emergency {
         padding: 0;
     }
 
+    /* ── Página de emergência ─────────────────────────────────── */
     .page-emergency {
-        /* Dimensões exatas A4 — border-box inclui a borda no cálculo */
         width: 210mm;
-        height: 297mm;
+        /* min-height garante que a página ocupe pelo menos uma
+           folha A4; se houver mais conteúdo o browser pagina
+           naturalmente sem comprimir os elementos */
+        min-height: 297mm;
         box-sizing: border-box;
-        overflow: hidden;
 
-        /* Borda 4 lados coloridos (fallback do gradiente de tela) */
+        /* Borda 4 lados coloridos (fallback do gradiente) */
         border-width: 5px;
         border-style: solid;
-        border-color: var(--nox-blue-dark, #003df5)   /* topo  */
-                      #7030d6                          /* dir   */
-                      var(--nox-orange, #ff5e00)       /* baixo */
-                      #7030d6;                         /* esq   */
+        border-color: var(--nox-blue-dark, #003df5)
+                      #7030d6
+                      var(--nox-orange, #ff5e00)
+                      #7030d6;
         border-radius: 10px;
 
         background: white !important;
-        padding: 10mm 13mm 8mm;
+        padding: 8mm 11mm 7mm;
         display: flex;
         flex-direction: column;
 
-        /* Quebra de página */
+        /* O break-after garante que a próxima .page-emergency
+           começa sempre numa folha nova */
         break-after: page;
         page-break-after: always;
-        break-inside: avoid;
-        page-break-inside: avoid;
 
         box-shadow: none;
         margin: 0;
     }
 
-    /* Evita folha em branco após a última página */
+    /* Última página não precisa de quebra depois */
     .page-emergency:last-child {
         break-after: auto;
         page-break-after: auto;
     }
 
-    /* Garantir cores em impressão */
+    /* CRUCIAL: impede o flexbox de comprimir os filhos.
+       Cada bloco ocupa seu tamanho natural — sem deformação. */
+    .page-emergency > * {
+        flex-shrink: 0;
+    }
+
+    /* ── Redução de espaçamentos para impressão ──────────────── */
+    .page-emergency .section-wrapper {
+        margin-top: 6px;
+        margin-bottom: 3px;
+    }
+
+    .page-emergency .section-title {
+        font-size: 8.5pt;
+        padding: 1px 12px;
+    }
+
+    .emergency-header {
+        margin-bottom: 6px;
+        padding-bottom: 5px;
+    }
+
+    .ficha-title.emergency-title {
+        font-size: 22pt;
+    }
+
+    .danger-banner {
+        padding: 4px 10px;
+        margin-bottom: 6px;
+        font-size: 8.5pt;
+    }
+
+    .product-bar {
+        padding: 4px 14px;
+        margin-bottom: 5px;
+        font-size: 11pt;
+    }
+
+    /* Tabelas mais compactas */
+    .emergency-table th,
+    .emergency-table td {
+        padding: 2px 5px;
+        font-size: 8pt;
+        line-height: 1.3;
+    }
+
+    .emergency-table.compact th,
+    .emergency-table.compact td {
+        padding: 2px 4px;
+        font-size: 7.5pt;
+    }
+
+    /* Ícones de seção menores */
+    .icon-box {
+        width: 52px;
+        height: 52px;
+        min-width: 52px;
+    }
+
+    .icon-text-content {
+        font-size: 8pt;
+        line-height: 1.35;
+    }
+
+    /* Grade de perigos */
+    .hazard-grid {
+        gap: 5px;
+        margin: 4px 0;
+    }
+
+    .hazard-item {
+        padding: 5px 3px;
+    }
+
+    .hazard-svg {
+        width: 26px;
+        height: 26px;
+        margin-bottom: 2px;
+    }
+
+    .hazard-label {
+        font-size: 6pt;
+    }
+
+    .hazard-level {
+        font-size: 9.5pt;
+    }
+
+    /* Assinatura */
+    .signature-block {
+        gap: 10px;
+        margin: 5px 0;
+    }
+
+    .sig-line {
+        min-height: 20px;
+    }
+
+    /* Rodapé */
+    .page-footer-info {
+        margin-top: auto;
+        padding-top: 4px;
+        font-size: 7pt;
+    }
+
+    /* Página 4 — Telefones */
+    .phone-page-title {
+        font-size: 13pt;
+        margin: 2px 0 6px;
+        padding-bottom: 4px;
+    }
+
+    .national-phones {
+        gap: 5px;
+        margin-bottom: 7px;
+    }
+
+    .nat-phone-item {
+        padding: 5px 4px;
+    }
+
+    .nat-org {
+        font-size: 6.5pt;
+    }
+
+    .nat-number {
+        font-size: 14pt;
+    }
+
+    .region-label {
+        font-size: 7.5pt;
+        padding: 2px 8px;
+        margin-top: 4px;
+    }
+
+    .phone-table th,
+    .phone-table td {
+        padding: 1.5px 4px;
+        font-size: 7pt;
+    }
+
+    /* ── Garantir cores em impressão ─────────────────────────── */
     .page-emergency .section-title,
     .danger-banner,
     .nat-phone-item,
