@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ficha de Emergência de Transporte — NOX Cor</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/logo.css">
+    <link rel="stylesheet" href="css/modal.css">
+    <link rel="stylesheet" href="css/ficha-emergencia.css">
+    <!-- PDF.js para ler arquivos PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+        if (window.pdfjsLib) {
+            window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+                'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        }
+    </script>
+    <!-- Google Generative AI SDK -->
+    <script type="importmap">
+      {
+        "imports": {
+          "@google/generative-ai": "https://esm.run/@google/generative-ai"
+        }
+      }
+    </script>
+</head>
+<body class="doc-emergency">
+
+    <!-- ══════════════ CONTROLES ══════════════ -->
+    <div class="controls no-print">
+        <div class="toolbar">
+            <button data-command="bold"                title="Negrito"><b>B</b></button>
+            <button data-command="italic"              title="Itálico"><i>I</i></button>
+            <button data-command="underline"           title="Sublinhado"><u>U</u></button>
+            <button data-command="insertUnorderedList" title="Lista">●</button>
+            <button data-command="insertOrderedList"   title="Lista Numerada">1.</button>
+            <button data-command="justifyLeft"         title="Alinhar Esquerda">⇤</button>
+            <button data-command="justifyCenter"       title="Centralizar">↔</button>
+            <button data-command="justifyRight"        title="Alinhar Direita">⇥</button>
+            <button data-command="createLink"          title="Link">🔗</button>
+            <select id="font-size-selector" title="Tamanho da Fonte"
+                    style="padding:5px;border:1px solid #ddd;border-radius:4px;">
+                <option value="" disabled selected>Tamanho</option>
+                <option value="1">10px</option>
+                <option value="2">13px</option>
+                <option value="3">16px</option>
+                <option value="4">18px</option>
+                <option value="5">24px</option>
+                <option value="6">32px</option>
+                <option value="7">48px</option>
+            </select>
+        </div>
+
+        <div class="actions" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <a href="index.html" class="btn-doc-link blue-link" title="Abrir Ficha Técnica (Boletim)">
+                📋 Ficha Técnica
+            </a>
+
+            <button id="btn-save-project" class="secondary" title="Salvar Projeto (JSON)">💾 Salvar</button>
+            <button id="btn-load-project" class="secondary" title="Carregar Projeto (JSON/DOC)">📂 Abrir</button>
+            <input type="file" id="file-input" style="display:none;" accept=".json,.doc,.html">
+
+            <button id="btn-import-text" class="secondary" title="Importar Apenas Texto">📝 Imp. Texto</button>
+            <input type="file" id="file-input-text" style="display:none;" accept=".doc,.html">
+
+            <button id="btn-ai-fill" class="secondary" title="Preencher com IA (Gemini)"
+                    style="background-color:#673ab7;">✨ IA</button>
+            <input type="file" id="file-input-pdf" style="display:none;" accept=".pdf">
+
+            <button id="btn-add-page"    class="secondary">+ Pág</button>
+            <button id="btn-remove-page" class="secondary" style="background-color:#dc3545;">- Pág</button>
+            <button onclick="window.print()" title="Imprimir / PDF">🖨️ PDF</button>
+            <button id="btn-export-word" style="background-color:#005A9E;" title="Exportar para Word">Word</button>
+        </div>
+    </div>
+
+    <!-- ══════════════ PÁGINAS ══════════════ -->
+    <div id="pages-container">
+
+        <!-- ┌─────────────────────────────────────────────────────────────┐
+             │ PÁGINA 1 — IDENTIFICAÇÃO DO PRODUTO E DADOS FÍSICO-QUÍMICOS │
+             └─────────────────────────────────────────────────────────────┘ -->
+        <div class="page page-emergency" id="page1">
+
+            <div class="header emergency-header">
+                <div class="logo"><img src="assets/logo.png" alt="NOX Cor"></div>
+                <div class="emergency-title-block">
+                    <div class="emergency-main-title">FICHA DE EMERGÊNCIA</div>
+                    <div class="emergency-sub-title">DE TRANSPORTE</div>
+                </div>
+                <div class="company-info editable" contenteditable="true">
+                    <strong>Kromo Ind. e Com. de Tintas LTDA</strong><br>
+                    Pinheiral — RJ | CEP: 27197-000<br>
+                    Tel: (24) 3016 4937<br>
+                    sac@noxcor.com.br
+                </div>
+            </div>
+
+            <div class="danger-banner editable" contenteditable="true">
+                ⚠&nbsp; PRODUTO PERIGOSO — INFORMAÇÕES DE EMERGÊNCIA PARA TRANSPORTE RODOVIÁRIO, FERROVIÁRIO, HIDROVIÁRIO E AEROVIÁRIO
+            </div>
+
+            <!-- IDENTIFICAÇÃO -->
+            <div class="es-section blue">Identificação do Produto e da Empresa</div>
+            <table class="emergency-table">
+                <tr>
+                    <th colspan="4">Nome do produto / Trade name</th>
+                </tr>
+                <tr>
+                    <td colspan="4" class="editable" contenteditable="true"
+                        data-ai-field="emergency_product_name"
+                        style="font-size:12px;font-weight:bold;text-align:center;">
+                        [Nome completo do produto NOX Cor]
+                    </td>
+                </tr>
+                <tr>
+                    <th>Nº ONU</th>
+                    <th>Classe de risco</th>
+                    <th>Risco subsidiário</th>
+                    <th>Grupo de embalagem</th>
+                </tr>
+                <tr>
+                    <td class="editable" contenteditable="true" data-ai-field="un_number">UN ____</td>
+                    <td class="editable" contenteditable="true" data-ai-field="risk_class">____</td>
+                    <td class="editable" contenteditable="true" data-ai-field="subsidiary_risk">____</td>
+                    <td class="editable" contenteditable="true" data-ai-field="packing_group">Grupo ___</td>
+                </tr>
+                <tr>
+                    <th colspan="4">Nome de expedição ONU (Proper Shipping Name)</th>
+                </tr>
+                <tr>
+                    <td colspan="4" class="editable" contenteditable="true" data-ai-field="shipping_name">
+                        [Nome de expedição conforme tabela ONU]
+                    </td>
+                </tr>
+                <tr>
+                    <th colspan="2">Fabricante / Importador</th>
+                    <th colspan="2">CNPJ</th>
+                </tr>
+                <tr>
+                    <td colspan="2" class="editable" contenteditable="true" data-ai-field="manufacturer">
+                        Kromo Industria e Comércio de Tintas LTDA<br>
+                        Rua Nílton Penna Botelho, 4111 — Pinheiral/RJ
+                    </td>
+                    <td colspan="2" class="editable" contenteditable="true" data-ai-field="manufacturer_cnpj">
+                        __.___.___ / ____-__
+                    </td>
+                </tr>
+                <tr>
+                    <th colspan="4">Telefone de emergência do fabricante (24 h)</th>
+                </tr>
+                <tr>
+                    <td colspan="4" class="editable emergency-phone-field" contenteditable="true"
+                        data-ai-field="manufacturer_emergency_phone">
+                        (24) 3016-4937 &nbsp;|&nbsp; 0800 ___-____
+                    </td>
+                </tr>
+            </table>
+
+            <!-- DADOS FÍSICO-QUÍMICOS -->
+            <div class="es-section blue">Dados Físico-Químicos Relevantes para o Transporte</div>
+            <table class="emergency-table">
+                <tr>
+                    <th>Estado físico</th>
+                    <th>Cor</th>
+                    <th>Odor</th>
+                    <th>pH (20 °C)</th>
+                </tr>
+                <tr>
+                    <td class="editable" contenteditable="true" data-ai-field="physical_state">Líquido</td>
+                    <td class="editable" contenteditable="true" data-ai-field="color_appearance">Diversas</td>
+                    <td class="editable" contenteditable="true" data-ai-field="odor">Característico de solventes</td>
+                    <td class="editable" contenteditable="true" data-ai-field="ph">____</td>
+                </tr>
+                <tr>
+                    <th>Ponto de inflamação</th>
+                    <th>Temp. de autoignição</th>
+                    <th>Pressão de vapor (20 °C)</th>
+                    <th>Densidade (20 °C)</th>
+                </tr>
+                <tr>
+                    <td class="editable" contenteditable="true" data-ai-field="flash_point">__ °C</td>
+                    <td class="editable" contenteditable="true" data-ai-field="autoignition_temp">__ °C</td>
+                    <td class="editable" contenteditable="true" data-ai-field="vapor_pressure">__ kPa</td>
+                    <td class="editable" contenteditable="true" data-ai-field="density">__ g/cm³</td>
+                </tr>
+                <tr>
+                    <th>Lim. inf. explosividade</th>
+                    <th>Lim. sup. explosividade</th>
+                    <th>Solubilidade em água</th>
+                    <th>Temp. de ebulição</th>
+                </tr>
+                <tr>
+                    <td class="editable" contenteditable="true" data-ai-field="lel">__ % (v/v)</td>
+                    <td class="editable" contenteditable="true" data-ai-field="uel">__ % (v/v)</td>
+                    <td class="editable" contenteditable="true" data-ai-field="water_solubility">Insolúvel / Parcial</td>
+                    <td class="editable" contenteditable="true" data-ai-field="boiling_point">__ °C</td>
+                </tr>
+            </table>
+
+            <!-- IDENTIFICAÇÃO DOS PERIGOS -->
+            <div class="es-section red">Identificação dos Perigos (GHS / Sistema Harmonizado)</div>
+            <div class="hazard-grid">
+                <div class="hazard-item editable" contenteditable="true" data-ai-field="hazard_health">
+                    <div class="hazard-icon">⚕</div>
+                    <div class="hazard-label">Saúde</div>
+                    <div class="hazard-level">Nível &nbsp;___</div>
+                </div>
+                <div class="hazard-item editable" contenteditable="true" data-ai-field="hazard_fire">
+                    <div class="hazard-icon">🔥</div>
+                    <div class="hazard-label">Inflamabilidade</div>
+                    <div class="hazard-level">Nível &nbsp;___</div>
+                </div>
+                <div class="hazard-item editable" contenteditable="true" data-ai-field="hazard_reactivity">
+                    <div class="hazard-icon">⚡</div>
+                    <div class="hazard-label">Reatividade</div>
+                    <div class="hazard-level">Nível &nbsp;___</div>
+                </div>
+                <div class="hazard-item editable" contenteditable="true" data-ai-field="hazard_env">
+                    <div class="hazard-icon">🌿</div>
+                    <div class="hazard-label">Meio Ambiente</div>
+                    <div class="hazard-level">Nível &nbsp;___</div>
+                </div>
+            </div>
+
+            <div class="page-footer-info">
+                <span class="editable" contenteditable="true">FE NOX — Rev. 01</span>
+                <span>Data Rev: ___/___/______</span>
+                <span>Pág. 1 / 4</span>
+            </div>
+        </div><!-- /page1 -->
+
+
+        <!-- ┌─────────────────────────────────────────────────────────────┐
+             │ PÁGINA 2 — RISCOS E MEDIDAS DE EMERGÊNCIA                   │
+             └─────────────────────────────────────────────────────────────┘ -->
+        <div class="page page-emergency" id="page2">
+
+            <div class="header emergency-header">
+                <div class="logo"><img src="assets/logo.png" alt="NOX Cor"></div>
+                <div class="emergency-title-block">
+                    <div class="emergency-main-title">FICHA DE EMERGÊNCIA</div>
+                    <div class="emergency-sub-title">DE TRANSPORTE</div>
+                </div>
+                <div class="company-info editable" contenteditable="true">
+                    <strong>Kromo Ind. e Com. de Tintas LTDA</strong><br>
+                    Tel: (24) 3016 4937
+                </div>
+            </div>
+
+            <!-- RISCOS À SAÚDE -->
+            <div class="es-section red">Riscos à Saúde</div>
+            <table class="emergency-table compact">
+                <tr>
+                    <th style="width:22%">Via de exposição</th>
+                    <th>Efeitos e sintomas</th>
+                </tr>
+                <tr>
+                    <td><strong>Inalação</strong></td>
+                    <td class="editable" contenteditable="true" data-ai-field="health_inhalation">
+                        Vapores podem causar tontura, dor de cabeça, náusea e irritação das vias respiratórias. Em concentrações elevadas, pode ocorrer depressão do sistema nervoso central.
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>Contato com a pele</strong></td>
+                    <td class="editable" contenteditable="true" data-ai-field="health_skin">
+                        Pode causar irritação, ressecamento e dermatite por contato repetido. Absorção cutânea é possível.
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>Contato com os olhos</strong></td>
+                    <td class="editable" contenteditable="true" data-ai-field="health_eyes">
+                        Causa irritação intensa, lacrimejamento e possível dano corneal. Lavar imediatamente com água abundante.
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>Ingestão</strong></td>
+                    <td class="editable" contenteditable="true" data-ai-field="health_ingestion">
+                        Pode causar náusea, vômito, dor abdominal e, se aspirado para os pulmões, pneumonite química.
+                    </td>
+                </tr>
+            </table>
+
+            <!-- RISCOS DE INCÊNDIO -->
+            <div class="es-section orange">Riscos de Incêndio e Explosão</div>
+            <div class="editable" contenteditable="true" data-ai-field="fire_risks"
+                 style="font-size:10px;padding:5px 4px;line-height:1.6;">
+                <strong>Comportamento no incêndio:</strong> Produto inflamável; vapores mais densos que o ar podem acumular-se em locais baixos e atingir fontes de ignição distantes.<br>
+                <strong>Produtos de combustão:</strong> Monóxido de carbono (CO), dióxido de carbono (CO₂), isocianatos e outros gases tóxicos.<br>
+                <strong>Risco de explosão:</strong> [Descrever se há risco de explosão de recipientes sob calor] — Resfriar embalagens expostas ao fogo com água pulverizada.
+            </div>
+
+            <!-- RISCOS AO MEIO AMBIENTE -->
+            <div class="es-section green">Riscos ao Meio Ambiente</div>
+            <div class="editable" contenteditable="true" data-ai-field="env_risks"
+                 style="font-size:10px;padding:5px 4px;line-height:1.6;">
+                <strong>Toxicidade aquática:</strong> [Tóxico / Muito tóxico / Não classificado] para organismos aquáticos com efeitos de longa duração.<br>
+                <strong>Persistência:</strong> [Baixa / Moderada / Alta] — [Biodegradabilidade ___]<br>
+                <strong>Bioacumulação:</strong> Potencial de bioacumulação [baixo / moderado / alto] — Log Kow: ___<br>
+                <strong>Impacto em caso de vazamento:</strong> Evitar que o produto atinja corpos d'água, solo ou redes de esgoto. Notificar autoridades ambientais competentes.
+            </div>
+
+            <!-- PRIMEIROS SOCORROS -->
+            <div class="es-section blue">Primeiros Socorros</div>
+            <table class="emergency-table compact">
+                <tr>
+                    <th style="width:22%">Situação</th>
+                    <th>Procedimento imediato</th>
+                </tr>
+                <tr>
+                    <td><strong>Inalação</strong></td>
+                    <td class="editable" contenteditable="true" data-ai-field="firstaid_inhalation">
+                        Remover a vítima para local arejado. Manter aquecida e em repouso. Se a respiração parar, aplicar respiração artificial (não boca a boca). Chamar socorro médico — Tel. 192 (SAMU).
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>Pele</strong></td>
+                    <td class="editable" contenteditable="true" data-ai-field="firstaid_skin">
+                        Retirar roupas e calçados contaminados. Lavar a área afetada com água corrente e sabão por no mínimo 15 minutos. Buscar atendimento médico se houver irritação persistente.
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>Olhos</strong></td>
+                    <td class="editable" contenteditable="true" data-ai-field="firstaid_eyes">
+                        Lavar os olhos com água corrente por no mínimo 15 minutos, mantendo as pálpebras abertas. Não usar colírios sem prescrição. Encaminhar ao oftalmologista imediatamente.
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>Ingestão</strong></td>
+                    <td class="editable" contenteditable="true" data-ai-field="firstaid_ingestion">
+                        NÃO provocar vômito — risco de aspiração pulmonar. Dar pequenas quantidades de água para beber. Chamar socorro médico imediatamente. Consultar CEATOX: (11) 3069-8571.
+                    </td>
+                </tr>
+            </table>
+
+            <!-- COMBATE A INCÊNDIO -->
+            <div class="es-section red">Combate a Incêndio</div>
+            <div class="editable" contenteditable="true" data-ai-field="fire_fighting"
+                 style="font-size:10px;padding:5px 4px;line-height:1.6;">
+                <strong>Agentes extintores adequados:</strong> Espuma química, pó químico seco, CO₂ ou neblina de água.<br>
+                <strong>Agentes inadequados:</strong> Jato direto de água (pode espalhar o produto).<br>
+                <strong>EPI para combate:</strong> Equipamento autônomo de respiração (SCBA) e traje de proteção química completo.<br>
+                <strong>Procedimentos especiais:</strong> Resfriar recipientes expostos ao calor com água pulverizada. Evacuar a área. Não permanecer no local sem EPI adequado.
+            </div>
+
+            <!-- DERRAMAMENTO -->
+            <div class="es-section orange">Derramamento / Vazamento</div>
+            <div class="editable" contenteditable="true" data-ai-field="spill_response"
+                 style="font-size:10px;padding:5px 4px;line-height:1.6;">
+                <strong>Precauções pessoais:</strong> Utilizar EPI completo (luvas nitrilo, óculos, respirador VO, avental). Afastar fontes de ignição. Evitar inalação de vapores.<br>
+                <strong>Precauções ambientais:</strong> Conter o derramamento e impedir que atinja redes de esgoto, córregos ou solo.<br>
+                <strong>Contenção:</strong> Usar diques de areia, terra ou vermiculita. Absorver com material inerte seco.<br>
+                <strong>Recolhimento:</strong> Recolher o resíduo em recipiente fechado e rotulado. Destinar para tratamento/incineração conforme legislação ambiental vigente.
+            </div>
+
+            <div class="page-footer-info">
+                <span class="editable" contenteditable="true">FE NOX — Rev. 01</span>
+                <span>Data Rev: ___/___/______</span>
+                <span>Pág. 2 / 4</span>
+            </div>
+        </div><!-- /page2 -->
+
+
+        <!-- ┌─────────────────────────────────────────────────────────────┐
+             │ PÁGINA 3 — EPI, TRANSPORTE E INFORMAÇÕES COMPLEMENTARES     │
+             └─────────────────────────────────────────────────────────────┘ -->
+        <div class="page page-emergency" id="page3">
+
+            <div class="header emergency-header">
+                <div class="logo"><img src="assets/logo.png" alt="NOX Cor"></div>
+                <div class="emergency-title-block">
+                    <div class="emergency-main-title">FICHA DE EMERGÊNCIA</div>
+                    <div class="emergency-sub-title">DE TRANSPORTE</div>
+                </div>
+                <div class="company-info editable" contenteditable="true">
+                    <strong>Kromo Ind. e Com. de Tintas LTDA</strong><br>
+                    Tel: (24) 3016 4937
+                </div>
+            </div>
+
+            <!-- EPI -->
+            <div class="es-section blue">Equipamento de Proteção Individual (EPI)</div>
+            <table class="emergency-table">
+                <tr>
+                    <th style="width:30%">EPI</th>
+                    <th>Especificação mínima recomendada</th>
+                    <th style="width:18%;text-align:center;">Obrigatório</th>
+                </tr>
+                <tr>
+                    <td>Luvas de proteção</td>
+                    <td class="editable" contenteditable="true" data-ai-field="ppe_gloves">Nitrilo, espessura mínima 0,35 mm (EN 374)</td>
+                    <td style="text-align:center;font-weight:bold;color:#27ae60;">Sim</td>
+                </tr>
+                <tr>
+                    <td>Proteção respiratória</td>
+                    <td class="editable" contenteditable="true" data-ai-field="ppe_respiratory">Respirador semifacial com filtro para vapores orgânicos — Classe P2/VO (EN 140)</td>
+                    <td style="text-align:center;font-weight:bold;color:#27ae60;">Sim</td>
+                </tr>
+                <tr>
+                    <td>Proteção ocular / facial</td>
+                    <td class="editable" contenteditable="true" data-ai-field="ppe_eye">Óculos de segurança vedante ou protetor facial (EN 166)</td>
+                    <td style="text-align:center;font-weight:bold;color:#27ae60;">Sim</td>
+                </tr>
+                <tr>
+                    <td>Proteção corporal</td>
+                    <td class="editable" contenteditable="true" data-ai-field="ppe_body">Avental ou macacão de proteção química (EN 13982)</td>
+                    <td style="text-align:center;font-weight:bold;color:#27ae60;">Sim</td>
+                </tr>
+                <tr>
+                    <td>Calçado de segurança</td>
+                    <td class="editable" contenteditable="true" data-ai-field="ppe_footwear">Bota antiestática com biqueira de aço (CA aprovado MTE)</td>
+                    <td style="text-align:center;font-weight:bold;color:#e67e22;">Recom.</td>
+                </tr>
+            </table>
+
+            <!-- REGULAMENTAÇÃO DE TRANSPORTE -->
+            <div class="es-section orange">Regulamentação de Transporte</div>
+            <table class="emergency-table">
+                <tr>
+                    <th style="width:25%">Modal</th>
+                    <th>Nº ONU / Classe de risco</th>
+                    <th>Grupo de embalagem</th>
+                    <th>Legislação aplicável</th>
+                </tr>
+                <tr>
+                    <td><strong>Rodoviário (Brasil)</strong></td>
+                    <td class="editable" contenteditable="true" data-ai-field="transport_road_un">UN ____</td>
+                    <td class="editable" contenteditable="true" data-ai-field="transport_road_pg">Grupo ___</td>
+                    <td>Resolução ANTT 5.848/2019</td>
+                </tr>
+                <tr>
+                    <td><strong>Marítimo (IMO)</strong></td>
+                    <td class="editable" contenteditable="true" data-ai-field="transport_sea_un">UN ____</td>
+                    <td class="editable" contenteditable="true" data-ai-field="transport_sea_pg">Grupo ___</td>
+                    <td>IMDG Code (edição vigente)</td>
+                </tr>
+                <tr>
+                    <td><strong>Aéreo (IATA)</strong></td>
+                    <td class="editable" contenteditable="true" data-ai-field="transport_air_un">UN ____</td>
+                    <td class="editable" contenteditable="true" data-ai-field="transport_air_pg">Grupo ___</td>
+                    <td>IATA DGR (edição vigente)</td>
+                </tr>
+                <tr>
+                    <td><strong>Ferroviário</strong></td>
+                    <td class="editable" contenteditable="true" data-ai-field="transport_rail_un">UN ____</td>
+                    <td class="editable" contenteditable="true" data-ai-field="transport_rail_pg">Grupo ___</td>
+                    <td>Portaria ANTT / RID</td>
+                </tr>
+            </table>
+
+            <!-- ARMAZENAMENTO E MANUSEIO -->
+            <div class="es-section blue">Armazenamento e Manuseio</div>
+            <div class="editable" contenteditable="true" data-ai-field="storage_handling"
+                 style="font-size:10px;padding:5px 4px;line-height:1.6;">
+                <strong>Armazenamento:</strong> Manter em local fresco, seco e bem ventilado, longe de fontes de ignição, calor excessivo e luz solar direta. Temperatura de armazenamento: [__ a __ °C].<br>
+                <strong>Manuseio:</strong> Evitar inalação de vapores e contato com pele/olhos. Usar sempre em áreas com ventilação adequada. Aterrar e unir recipientes durante o manuseio (risco eletrostático).<br>
+                <strong>Materiais incompatíveis:</strong> Oxidantes fortes, ácidos concentrados, bases fortes, água (componente isocianato).<br>
+                <strong>Prazo de validade:</strong> [X] meses, em embalagem fechada e original, nas condições de armazenamento recomendadas.
+            </div>
+
+            <!-- INFORMAÇÕES ADICIONAIS -->
+            <div class="es-section dark">Informações Adicionais / Notas</div>
+            <div class="editable" contenteditable="true" data-ai-field="emergency_notes"
+                 style="font-size:10px;padding:5px 4px;line-height:1.6;">
+                As informações desta Ficha de Emergência baseiam-se nos dados disponíveis até a data da última revisão e visam subsidiar equipes de atendimento a emergências no transporte de produtos perigosos.<br>
+                Para informações completas de segurança, saúde e meio ambiente, consultar obrigatoriamente a FISPQ / FDS deste produto.<br>
+                Em caso de emergência envolvendo este produto durante o transporte, acionar imediatamente os serviços de emergência listados na página final desta ficha.
+            </div>
+
+            <!-- RESPONSÁVEL TÉCNICO -->
+            <div class="es-section blue">Responsável Técnico pela Ficha de Emergência</div>
+            <div class="signature-block">
+                <div class="sig-field">
+                    <div class="sig-line editable" contenteditable="true">&nbsp;</div>
+                    <div class="sig-label">Nome completo / Assinatura do Responsável</div>
+                </div>
+                <div class="sig-field">
+                    <div class="sig-line editable" contenteditable="true" data-ai-field="responsible_role">&nbsp;</div>
+                    <div class="sig-label">Cargo / Registro profissional (CRQ / CRM / etc.)</div>
+                </div>
+                <div class="sig-field">
+                    <div class="sig-line">&nbsp;</div>
+                    <div class="sig-label">Data de emissão / revisão</div>
+                </div>
+            </div>
+
+            <div class="page-footer-info">
+                <span class="editable" contenteditable="true">FE NOX — Rev. 01</span>
+                <span>Data Rev: ___/___/______</span>
+                <span>Pág. 3 / 4</span>
+            </div>
+        </div><!-- /page3 -->
+
+
+        <!-- ┌─────────────────────────────────────────────────────────────┐
+             │ PÁGINA 4 — TELEFONES ÚTEIS DE EMERGÊNCIA (ÚLTIMA PÁGINA)    │
+             └─────────────────────────────────────────────────────────────┘ -->
+        <div class="page page-emergency" id="page4">
+
+            <div class="header emergency-header">
+                <div class="logo"><img src="assets/logo.png" alt="NOX Cor"></div>
+                <div class="emergency-title-block">
+                    <div class="emergency-main-title">FICHA DE EMERGÊNCIA</div>
+                    <div class="emergency-sub-title">DE TRANSPORTE</div>
+                </div>
+                <div class="company-info editable" contenteditable="true">
+                    <strong>Kromo Ind. e Com. de Tintas LTDA</strong><br>
+                    Tel: (24) 3016 4937
+                </div>
+            </div>
+
+            <div class="phone-page-title">TELEFONES ÚTEIS</div>
+
+            <!-- Números nacionais em destaque -->
+            <div class="national-phones">
+                <div class="nat-phone-item blue-bg">
+                    <span class="nat-org">Polícia Militar</span>
+                    <span class="nat-number">190</span>
+                </div>
+                <div class="nat-phone-item red-bg">
+                    <span class="nat-org">Corpo de Bombeiros</span>
+                    <span class="nat-number">193</span>
+                </div>
+                <div class="nat-phone-item orange-bg">
+                    <span class="nat-org">Defesa Civil</span>
+                    <span class="nat-number">199</span>
+                </div>
+                <div class="nat-phone-item green-bg">
+                    <span class="nat-org">CEATOX — Centro de Ass. Toxicológica</span>
+                    <span class="nat-number">011 3069-8571</span>
+                </div>
+            </div>
+
+            <!-- ── NORTE ── -->
+            <div class="region-label">Norte</div>
+            <table class="phone-table">
+                <thead>
+                    <tr>
+                        <th>Estado</th>
+                        <th>Defesa Civil</th>
+                        <th>Bombeiros</th>
+                        <th>Polícia Rodoviária</th>
+                        <th>Órgão de Meio Ambiente</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>Acre</td>         <td>(68) 223-3983</td><td>(68) 223-1616</td><td>(68) 221-4048</td><td>(68) 222-7474</td></tr>
+                    <tr><td>Amapá</td>        <td>(96) 212-1230</td><td>(96) 212-1232</td><td>(96) 222-7626</td><td>(96) 212-5311</td></tr>
+                    <tr><td>Amazonas</td>     <td>(92) 672-1510 / (92) 672-1511</td><td>(92) 663-5929 / (93) 622-2593</td><td>(92) 648-6520</td><td>(92) 643-2300 / (92) 643-2309</td></tr>
+                    <tr><td>Pará</td>         <td>(91) 242-5155</td><td>(91) 241-1234</td><td>(91) 3724-1367</td><td>(91) 276-5100</td></tr>
+                    <tr><td>Rondônia</td>     <td>(69) 216-5586</td><td>(69) 216-5586</td><td>(69) 221-0154</td><td>(69) 224-2220 / (69) 229-0222</td></tr>
+                    <tr><td>Roraima</td>      <td>(95) 623-1185</td><td>(95) 626-2707</td><td>(95) 627-3244</td><td>(95) 623-1466</td></tr>
+                    <tr><td>Tocantins</td>    <td>(63) 218-2715</td><td>(63) 218-2715</td><td>(63) 312-3007</td><td>(63) 215-2381</td></tr>
+                </tbody>
+            </table>
+
+            <!-- ── NORDESTE ── -->
+            <div class="region-label">Nordeste</div>
+            <table class="phone-table">
+                <thead>
+                    <tr>
+                        <th>Estado</th>
+                        <th>Defesa Civil</th>
+                        <th>Bombeiros</th>
+                        <th>Polícia Rodoviária</th>
+                        <th>Órgão de Meio Ambiente</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>Maranhão</td>           <td>(98) 228-2291</td><td>(98) 228-2154</td><td>(98) 244-2292</td><td>(98) 221-2063</td></tr>
+                    <tr><td>Piauí</td>              <td>(86) 232-1799</td><td>(86) 223-4734 / (86) 223-6551</td><td>(86) 226-5701</td><td>(86) 233-3369</td></tr>
+                    <tr><td>Ceará</td>              <td>(85) 272-2728</td><td>(85) 283-2044</td><td>(85) 295-3022</td><td>(85) 488-7448 / (85) 488-7474</td></tr>
+                    <tr><td>Rio Grande do Norte</td><td>(84) 232-1762</td><td>(84) 223-3106</td><td>(84) 211-4708</td><td>(84) 211-5455</td></tr>
+                    <tr><td>Paraíba</td>            <td>(83) 310-6016</td><td>(83) 218-5747</td><td>(83) 242-6363</td><td>(83) 218-7200</td></tr>
+                    <tr><td>Pernambuco</td>         <td>(81) 3423-0242 / (81) 3423-5808</td><td>(81) 3423-1193</td><td>(81) 3465-8386</td><td>(81) 3441-5033</td></tr>
+                    <tr><td>Alagoas</td>            <td>(82) 221-1700 / R. 214</td><td>82 221-1700</td><td>(82) 237-4341</td><td>0800 82 1523</td></tr>
+                    <tr><td>Sergipe</td>            <td>(79) 214-0008</td><td>(79) 214-2609 / (79) 243-3677</td><td>(79) 261-1495</td><td>(79) 227-1393</td></tr>
+                    <tr><td>Bahia</td>              <td>(71) 381-9011</td><td>(71) 2463-1415</td><td>(71) 241-5855</td><td>0800 711 400</td></tr>
+                </tbody>
+            </table>
+
+            <!-- ── SUDESTE ── -->
+            <div class="region-label">Sudeste</div>
+            <table class="phone-table">
+                <thead>
+                    <tr>
+                        <th>Estado</th>
+                        <th>Defesa Civil</th>
+                        <th>Bombeiros</th>
+                        <th>Polícia Rodoviária</th>
+                        <th>Órgão de Meio Ambiente</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>Espírito Santo</td><td>(27) 3345-0144</td><td>(27) 3345-1222</td><td>(27) 3325-3222</td><td>(27) 3381-6337</td></tr>
+                    <tr><td>Minas Gerais</td>  <td>(31) 3337-7086</td><td>(31) 3289-8000</td><td>(31) 3333-2999</td><td>(31) 3298-6200</td></tr>
+                    <tr><td>Rio de Janeiro</td><td>(21) 2293-1605</td><td>(21) 572-0829</td> <td>(21) 2471-6111</td><td>(21) 2541-1993</td></tr>
+                    <tr><td>São Paulo</td>     <td>(11) 3745-3333</td><td>(11) 6601-0755</td><td>(11) 3327-2727</td><td>(11) 3030-7000</td></tr>
+                </tbody>
+            </table>
+
+            <!-- ── SUL ── -->
+            <div class="region-label">Sul</div>
+            <table class="phone-table">
+                <thead>
+                    <tr>
+                        <th>Estado</th>
+                        <th>Defesa Civil</th>
+                        <th>Bombeiros</th>
+                        <th>Polícia Rodoviária</th>
+                        <th>Órgão de Meio Ambiente</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>Paraná</td>          <td>(41) 350-2575</td><td>(41) 233-6974</td><td>(41) 373-0049</td><td>(41) 333-6163</td></tr>
+                    <tr><td>Santa Catarina</td>  <td>(48) 221-3329 / (48) 231-1236</td><td>(48) 244-1111</td><td>(47) 337-1182</td><td>(48) 222-8385</td></tr>
+                    <tr><td>Rio Grande do Sul</td><td>(51) 3210-4255</td><td>(51) 3331-6711</td><td>(51) 3339-6799</td><td>(51) 3226-3298</td></tr>
+                </tbody>
+            </table>
+
+            <!-- ── CENTRO-OESTE ── -->
+            <div class="region-label">Centro-Oeste</div>
+            <table class="phone-table">
+                <thead>
+                    <tr>
+                        <th>Estado</th>
+                        <th>Defesa Civil</th>
+                        <th>Bombeiros</th>
+                        <th>Polícia Rodoviária</th>
+                        <th>Órgão de Meio Ambiente</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>Mato Grosso do Sul</td><td>(67) 321-4961</td><td>(67) 321-4961</td><td>0800 67 1025</td><td>(67) 384-3011 / (67) 382-2966 / (67) 726-4363</td></tr>
+                    <tr><td>Mato Grosso</td>       <td>(65) 613-4400</td><td>(65) 613-7427</td><td>(65) 322-0005</td><td>(65) 644-1749</td></tr>
+                    <tr><td>Goiás</td>             <td>(62) 526-1811 / (62) 526-1812</td><td>(62) 533-8304</td><td>(62) 207-2288</td><td>(62) 224-2488</td></tr>
+                    <tr><td>Distrito Federal</td>  <td>(61) 363-1350</td><td>(61) 343-9014</td><td>(61) 447-1491</td><td>(61) 340-3784</td></tr>
+                </tbody>
+            </table>
+
+            <div class="phone-footer-ref">FE 013/16 — Revisão 02 — Data Rev: 17/11/2016</div>
+
+            <div class="page-footer-info">
+                <span class="editable" contenteditable="true">FE NOX — Rev. 01</span>
+                <span>Data Rev: ___/___/______</span>
+                <span>Pág. 4 / 4</span>
+            </div>
+        </div><!-- /page4 -->
+
+    </div><!-- /pages-container -->
+
+    <script type="module" src="js/main.js"></script>
+
+    <!-- Modal de Configuração da IA (reutilizado) -->
+    <div id="ai-modal" class="modal-overlay">
+        <div class="modal">
+            <h3>Instruções para a IA</h3>
+
+            <div class="form-group">
+                <label for="ai-product-name">Nome do Produto (Completo / Abreviado):</label>
+                <input type="text" id="ai-product-name" placeholder="Ex: NOXSEAL N2198 (N2198)">
+            </div>
+
+            <div class="form-group">
+                <label for="ai-proportion">Proporção de Mistura:</label>
+                <input type="text" id="ai-proportion" placeholder="Ex: 3A x 1B (Volume) ou 'idem' para usar do PDF">
+            </div>
+
+            <div class="form-group">
+                <label for="ai-related">Produtos Relacionados (Diluente / Catalisador):</label>
+                <input type="text" id="ai-related" placeholder="Ex: Catalisador N2198B, Diluente N001">
+            </div>
+
+            <div class="form-group">
+                <label for="ai-extra">Instruções Extras:</label>
+                <input type="text" id="ai-extra" placeholder="Ex: Preencher dados de transporte ONU, nº UN 1263...">
+            </div>
+
+            <div class="modal-actions">
+                <button id="btn-cancel-ai" class="btn-cancel">Cancelar</button>
+                <button id="btn-confirm-ai" style="background-color:#673ab7;">✨ Processar</button>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
