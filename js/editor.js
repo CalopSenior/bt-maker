@@ -86,7 +86,8 @@ export const Editor = {
         const lastPage = pages[pages.length - 1];
         
         const newPage = document.createElement('div');
-        newPage.className = 'page';
+        const firstPage = document.querySelector('#page1');
+        newPage.className = firstPage ? firstPage.className : 'page';
         newPage.id = `page${pages.length + 1}`;
         
         // Copiar header da página 1 (agora inclui o logo absoluto)
