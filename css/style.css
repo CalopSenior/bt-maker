@@ -83,6 +83,11 @@ button {
 button:hover {
   background-color: #002bb3;
 }
+/* `display: flex` acima venceria o [hidden] nativo do navegador */
+button[hidden],
+a[hidden] {
+  display: none !important;
+}
 button.secondary {
   background-color: #6c757d;
 }
