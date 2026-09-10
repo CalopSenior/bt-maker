@@ -5,6 +5,7 @@
 
 import { AIManager } from "./ai-manager.js";
 import { PageBuilder } from "./page-builder.js";
+import { PdfExport } from "./pdf-export.js";
 
 // --- SISTEMA DE LOGO GLOBAL ---
 document
@@ -159,6 +160,11 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("file-input").addEventListener("change", (e) => {
     if (e.target.files[0]) StorageManager.load(e.target.files[0]);
   });
+
+  // Geração do PDF por API (rasteriza as divs exatamente como estão na tela)
+  document
+    .getElementById("btn-export-pdf")
+    ?.addEventListener("click", () => PdfExport.generate({ selector: ".page" }));
 
   // Atualização em Tempo Real do Title do Documento (Para o nome do PDF)
   document.addEventListener("input", (e) => {

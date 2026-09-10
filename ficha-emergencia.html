@@ -63,10 +63,10 @@
                 Preencher com IA
             </button>
             <input type="file" id="file-input-emergency-pdf" style="display:none;" accept=".pdf" multiple>
-            <button onclick="window.print()" title="Imprimir / Gerar PDF"
+            <button id="btn-export-pdf" title="Gerar PDF idêntico ao que está na tela"
                 style="background-color:var(--nox-blue-dark,#003df5);color:white;">
                 <img src="assets/icon-print.svg" class="btn-icon-svg btn-icon-invert" alt="">
-                Imprimir PDF
+                Gerar PDF
             </button>
         </div>
     </div>
@@ -692,6 +692,12 @@
     <!-- ══════════ JS — Ficha de Emergência ══════════ -->
     <script type="module">
         import { EmergencyAI } from './js/emergency-ai.js';
+        import { PdfExport } from './js/pdf-export.js';
+
+        // Geração do PDF por API (rasteriza as divs exatamente como estão na tela)
+        document.getElementById('btn-export-pdf')?.addEventListener('click', () =>
+            PdfExport.generate({ selector: '.page-emergency' })
+        );
 
         // ── Upload de logo ──────────────────────────────────────
         document.getElementById('global-logo-upload')?.addEventListener('change', function (e) {
