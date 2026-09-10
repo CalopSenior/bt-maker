@@ -1,8 +1,14 @@
+import { IaToggle } from './ia-toggle.js';
+
 export const EmergencyAI = {
     apiKey: null,
     selectedFiles: [],
 
     init() {
+        // A ficha apresenta-se como preenchimento manual: o botão de IA só
+        // aparece depois de __USE_IA__ = true ser escrito na consola.
+        IaToggle.install(['#btn-emergency-ai']);
+
         const btnAI = document.getElementById('btn-emergency-ai');
         const fileInput = document.getElementById('file-input-emergency-pdf');
         const modal = document.getElementById('ai-modal-emergency');
