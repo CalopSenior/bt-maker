@@ -187,7 +187,7 @@ export const PdfExport = {
         String(text)
             .trim()
             .normalize('NFD')
-            .replace(/[̀-ͯ]/g, '')
+            .replace(/\p{Diacritic}/gu, '')
             .replace(/[^a-zA-Z0-9]+/g, '_')
             .replace(/^_+|_+$/g, '')
             .slice(0, 80),
