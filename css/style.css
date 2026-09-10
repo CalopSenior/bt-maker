@@ -382,10 +382,12 @@ p {
    REGRAS DE IMPRESSÃO (PDF EXPORT FIX)
    ======================================================== */
 
-/* @page padrão para o Boletim Técnico (ficha-emergencia.css sobrescreve com margin:0) */
+/* A margem física é dada pelo padding do .page (10mm 15mm), não pelo @page.
+   Se o @page tivesse margem, o .page (297mm) excederia a área imprimível
+   e cada página geraria uma folha em branco extra. */
 @page {
   size: A4 portrait;
-  margin: 12mm 15mm;
+  margin: 0;
 }
 
 @media print {
@@ -413,11 +415,25 @@ p {
   }
 
   .page {
+    width: 210mm;
+    min-height: 297mm;
+    box-sizing: border-box;
     box-shadow: none;
     margin: 0;
-    padding: 0;
+    padding: 10mm 15mm;
     break-after: page;
     page-break-after: always;
+    overflow: hidden;
+  }
+
+  /* Evita que blocos sejam cortados ao meio entre folhas */
+  .section-block,
+  .icon-row,
+  .blue-note-box,
+  table,
+  tr {
+    break-inside: avoid;
+    page-break-inside: avoid;
   }
 
   .page:last-child {
