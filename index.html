@@ -25,6 +25,7 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/modal.css">
     <link rel="stylesheet" href="css/logo.css">
+    <link rel="stylesheet" href="css/editor.css">
 </head>
 
 <body>
@@ -48,6 +49,9 @@
                 <option value="thinner">Diluente / Thinner (1 Pág)</option>
             </select>
             <button id="btn-generate-template" style="background-color: var(--nox-orange);">Aplicar Molde</button>
+            <button id="btn-fields-template" title="Escolher quais campos existem no documento">Campos do
+                Modelo</button>
+            <button id="btn-add-field" class="secondary" title="Acrescentar um campo ao documento">+ Campo</button>
         </div>
 
         <div style="width: 1px; height: 30px; background-color: #ccc; margin: 0 10px;"></div>
@@ -61,7 +65,8 @@
             <button id="btn-save-project" class="secondary" title="Salvar Projeto (JSON)">💾 Salvar</button>
             <button id="btn-load-project" class="secondary" title="Carregar Projeto">📂 Abrir</button>
             <input type="file" id="file-input" style="display: none;" accept=".json,.doc,.html">
-            <button id="btn-ai-fill" class="secondary" title="Preencher com IA Avançada"
+            <!-- Oculto por omissão: activa-se com __USE_IA__ = true na consola do navegador -->
+            <button id="btn-ai-fill" class="secondary" title="Preencher com IA Avançada" hidden
                 style="background-color: #673ab7; font-weight: bold;">✨ Extração IA Profunda</button>
             <input type="file" id="file-input-pdf" style="display: none;" accept=".pdf">
             <button id="btn-export-pdf" title="Gerar PDF idêntico ao que está na tela">🖨️ Gerar PDF</button>
@@ -131,6 +136,50 @@
             </div>
         </template>
 
+    </div>
+
+    <!-- MODAL: MONTAGEM MANUAL DO MODELO (quais campos o documento tem) -->
+    <div id="fields-picker-modal" class="modal-overlay">
+        <div class="modal" style="max-width: 620px; max-height: 90vh; overflow-y: auto;">
+            <h3>Campos do Documento</h3>
+            <p style="font-size: 12px; color: #666; margin-bottom: 10px;">
+                Marque os campos que devem existir no documento. Os campos já preenchidos mantêm o seu conteúdo, e a
+                ordem actual é preservada — os campos novos entram no fim.
+            </p>
+
+            <div class="form-group">
+                <label>Predefinições:</label>
+                <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                    <button id="picker-preset-tinta" style="font-size: 10px; padding: 4px 8px;">Tinta</button>
+                    <button id="picker-preset-thinner" style="font-size: 10px; padding: 4px 8px;">Thinner</button>
+                    <button id="picker-preset-clear" class="secondary" style="font-size: 10px; padding: 4px 8px;">Limpar
+                        Tudo</button>
+                </div>
+
+                <div id="picker-fields-container"
+                    style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px; background: #f9f9f9; padding: 10px; border: 1px solid #ddd; border-radius: 4px; max-height: 260px; overflow-y: auto;">
+                    <!-- Renderizado pelo field-manager.js -->
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-top: 12px;">
+                <label for="custom-field-title">Campo personalizado:</label>
+                <div class="custom-field-row">
+                    <input type="text" id="custom-field-title" placeholder="Nome do campo (ex.: GARANTIA)">
+                    <select id="custom-field-type">
+                        <option value="text">Só texto</option>
+                        <option value="icon">Com ícone</option>
+                    </select>
+                    <button id="btn-picker-add-custom" style="font-size: 11px; padding: 6px 10px;">Criar</button>
+                </div>
+            </div>
+
+            <div class="modal-actions" style="margin-top: 20px;">
+                <button id="btn-picker-cancel" class="btn-cancel">Cancelar</button>
+                <button id="btn-picker-apply" style="background-color: var(--nox-blue-dark); color: white;">Aplicar
+                    Campos</button>
+            </div>
+        </div>
     </div>
 
     <!-- MODAL IA ATUALIZADO (Totalmente Dinâmico) -->
