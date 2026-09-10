@@ -8,13 +8,15 @@
  *   - adicionar campos avulsos, incluindo campos personalizados;
  *   - remover, subir e descer cada bloco através dos controlos que aparecem
  *     ao passar o rato por cima dele;
- *   - editar o título de cada campo directamente na página.
+ *   - editar o título de cada campo directamente na página;
+ *   - guardar a estrutura como modelo reutilizável (ver template-store.js).
  *
  * Todas as operações passam por captureState() + PageBuilder.build(), por isso
  * o conteúdo já escrito é preservado e a paginação é sempre recalculada.
  */
 
 import { PageBuilder } from "./page-builder.js";
+import { TemplateStore } from "./template-store.js";
 
 export const FieldManager = {
     init() {
@@ -49,6 +51,18 @@ export const FieldManager = {
         document
             .getElementById("picker-preset-clear")
             ?.addEventListener("click", () => FieldManager.applyPreset("clear"));
+
+        document
+            .getElementById("btn-save-template")
+            ?.addEventListener("click", () => FieldManager.saveTemplate());
+
+        document
+            .getElementById("btn-load-template")
+            ?.addEventListener("click", () => FieldManager.loadTemplate());
+
+        document
+            .getElementById("btn-delete-template")
+            ?.addEventListener("click", () => FieldManager.deleteTemplate());
 
         // Os controlos por bloco são reaplicados sempre que a página é remontada
         FieldManager.decorate();
@@ -141,6 +155,7 @@ export const FieldManager = {
         FieldManager.customFields = schema.filter(s => s.custom);
 
         FieldManager.renderPicker(schema.map(s => s.field));
+        FieldManager.refreshTemplateList();
         modal.classList.add("active");
 
         if (focusCustom) document.getElementById("custom-field-title")?.focus();
@@ -225,28 +240,159 @@ export const FieldManager = {
     },
 
     /**
-     * Reconstrói o documento com os campos marcados, preservando a ordem
-     * actual para os que já existiam e acrescentando os novos no fim.
+     * Junta os campos marcados numa única lista ordenada: primeiro os que já
+     * existem no documento (mantendo a ordem actual), depois os novos.
+     */
+    orderedSelection() {
+        const checked = FieldManager.checkedFields();
+        const { schema } = PageBuilder.captureState();
+        const known = [...PageBuilder.ALL_FIELDS, ...(FieldManager.customFields || [])];
+
+        return [
+            ...schema.filter(s => checked.includes(s.field)),
+            ...checked
+                .filter(f => !schema.some(s => s.field === f))
+                .map(f => known.find(s => s.field === f))
+                .filter(Boolean)
+        ];
+    },
+
+    /**
+     * Reconstrói o documento com os campos marcados, preservando o conteúdo
+     * já escrito nos campos que se mantêm.
      */
     applyPicker() {
-        const checked = FieldManager.checkedFields();
-
-        if (checked.length === 0) {
+        if (FieldManager.checkedFields().length === 0) {
             alert("Selecione ao menos um campo para montar o documento.");
             return;
         }
 
-        const { schema, data } = PageBuilder.captureState();
-        const known = [...PageBuilder.ALL_FIELDS, ...(FieldManager.customFields || [])];
-
-        const kept = schema.filter(s => checked.includes(s.field));
-        const added = checked
-            .filter(f => !schema.some(s => s.field === f))
-            .map(f => known.find(s => s.field === f))
-            .filter(Boolean);
-
-        PageBuilder.build(data, [...kept, ...added]);
+        const { data } = PageBuilder.captureState();
+        PageBuilder.build(data, FieldManager.orderedSelection());
         FieldManager.closePicker();
+    },
+
+    // ── Modelos guardados (IndexedDB) ────────────────────────────
+
+    /**
+     * Reconstrói a lista de modelos guardados. Se o IndexedDB não estiver
+     * disponível, os controlos ficam desactivados em vez de dar erro.
+     */
+    async refreshTemplateList(selecionar) {
+        const select = document.getElementById("saved-templates-select");
+        if (!select) return;
+
+        const setState = (texto, activo) => {
+            select.innerHTML = `<option value="">${texto}</option>`;
+            select.disabled = !activo;
+            ["btn-load-template", "btn-delete-template"].forEach(id => {
+                const btn = document.getElementById(id);
+                if (btn) btn.disabled = !activo;
+            });
+        };
+
+        try {
+            const templates = await TemplateStore.list();
+
+            if (templates.length === 0) {
+                setState("(nenhum modelo guardado)", false);
+                return;
+            }
+
+            setState("Escolha um modelo…", true);
+            templates.forEach(tpl => {
+                const option = document.createElement("option");
+                option.value = tpl.name;
+                option.textContent = `${tpl.name} — ${tpl.fields.length} campo(s)`;
+                select.appendChild(option);
+            });
+
+            if (selecionar) select.value = selecionar;
+        } catch (err) {
+            console.warn("Modelos guardados indisponíveis:", err);
+            setState("(armazenamento local indisponível)", false);
+        }
+    },
+
+    /**
+     * Guarda os campos actualmente marcados como um modelo reutilizável.
+     * Guarda apenas a estrutura — nunca o conteúdo escrito.
+     */
+    async saveTemplate() {
+        const input = document.getElementById("template-name-input");
+        const name = input?.value.trim();
+
+        if (!name) {
+            alert("Dê um nome ao modelo antes de o guardar.");
+            input?.focus();
+            return;
+        }
+
+        if (FieldManager.checkedFields().length === 0) {
+            alert("Marque ao menos um campo para guardar como modelo.");
+            return;
+        }
+
+        const fields = FieldManager.orderedSelection();
+
+        try {
+            const existente = await TemplateStore.get(name);
+            if (existente && !confirm(`Já existe um modelo "${name}". Substituir?`)) return;
+
+            await TemplateStore.save(name, fields);
+            input.value = "";
+            await FieldManager.refreshTemplateList(name);
+            alert(`Modelo "${name}" guardado com ${fields.length} campo(s).`);
+        } catch (err) {
+            alert("Não foi possível guardar o modelo.\n\n" + err.message);
+        }
+    },
+
+    /**
+     * Aplica um modelo guardado, montando um documento em branco com os seus
+     * campos. Como não traz conteúdo, pede confirmação antes de substituir.
+     */
+    async loadTemplate() {
+        const name = document.getElementById("saved-templates-select")?.value;
+        if (!name) {
+            alert("Escolha um modelo para carregar.");
+            return;
+        }
+
+        try {
+            const tpl = await TemplateStore.get(name);
+            if (!tpl) {
+                alert(`O modelo "${name}" já não existe.`);
+                await FieldManager.refreshTemplateList();
+                return;
+            }
+
+            const aviso =
+                `Carregar o modelo "${name}" monta um documento em branco com ` +
+                `${tpl.fields.length} campo(s). O conteúdo actual será perdido. Continuar?`;
+            if (!confirm(aviso)) return;
+
+            PageBuilder.build({}, tpl.fields);
+            FieldManager.closePicker();
+        } catch (err) {
+            alert("Não foi possível carregar o modelo.\n\n" + err.message);
+        }
+    },
+
+    async deleteTemplate() {
+        const name = document.getElementById("saved-templates-select")?.value;
+        if (!name) {
+            alert("Escolha um modelo para apagar.");
+            return;
+        }
+        if (!confirm(`Apagar definitivamente o modelo "${name}"?`)) return;
+
+        try {
+            await TemplateStore.remove(name);
+            await FieldManager.refreshTemplateList();
+        } catch (err) {
+            alert("Não foi possível apagar o modelo.\n\n" + err.message);
+        }
     },
 
     plainTitle: section =>
