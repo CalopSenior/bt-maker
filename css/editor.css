@@ -1,0 +1,101 @@
+/* ========================================================
+   EDIÇÃO MANUAL DE CAMPOS
+   Controlos que só existem no ecrã — nunca são impressos.
+   ======================================================== */
+
+.section-block {
+  position: relative;
+}
+
+/* Barra de ferramentas de cada bloco: aparece ao passar o rato */
+.block-tools {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  display: flex;
+  gap: 2px;
+  opacity: 0;
+  transition: opacity 0.15s;
+  z-index: 10;
+}
+.section-block:hover .block-tools,
+.block-tools:focus-within {
+  opacity: 1;
+}
+
+.block-tools button {
+  padding: 0;
+  width: 22px;
+  height: 22px;
+  font-size: 11px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #ffffff;
+  color: #555;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+.block-tools button:hover {
+  background-color: #eef2ff;
+  border-color: var(--nox-blue-dark);
+  color: var(--nox-blue-dark);
+}
+.block-tools button[data-act="remove"]:hover {
+  background-color: #fee2e2;
+  border-color: #c0392b;
+  color: #c0392b;
+}
+
+/* O título do campo é editável: sinaliza isso discretamente */
+.section-title.editable:hover {
+  background-color: #f5f8ff;
+  border-color: transparent;
+}
+
+/* ── Selector de campos ─────────────────────────────────── */
+.picker-field {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  font-family: var(--font-body);
+  color: #333;
+  padding: 3px 5px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.picker-field:hover {
+  background-color: #eef2ff;
+}
+.picker-field input {
+  cursor: pointer;
+  margin: 0;
+}
+.picker-field .is-custom {
+  font-style: italic;
+  color: var(--nox-blue-dark);
+}
+
+.custom-field-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 6px;
+}
+.custom-field-row input[type="text"] {
+  flex: 1;
+  padding: 7px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-family: var(--font-body);
+  font-size: 13px;
+}
+
+@media print {
+  .block-tools {
+    display: none !important;
+  }
+}
