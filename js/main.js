@@ -6,6 +6,8 @@
 import { AIManager } from "./ai-manager.js";
 import { PageBuilder } from "./page-builder.js";
 import { PdfExport } from "./pdf-export.js";
+import { FieldManager } from "./field-manager.js";
+import { IaToggle } from "./ia-toggle.js";
 
 // --- SISTEMA DE LOGO GLOBAL ---
 document
@@ -144,8 +146,12 @@ document.addEventListener("DOMContentLoaded", () => {
   LogoManager.applyToAll();
   Editor.init();
 
-  // Inicializa a IA carregada do módulo externo
+  // Edição manual de campos (incluir / excluir / reordenar directamente nas divs)
+  FieldManager.init();
+
+  // A IA continua disponível, mas oculta: activa-se com __USE_IA__ = true na consola
   AIManager.init();
+  IaToggle.install(["#btn-ai-fill"]);
 
   document
     .getElementById("btn-save-project")
