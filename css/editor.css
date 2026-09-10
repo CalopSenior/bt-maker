@@ -93,6 +93,40 @@
   color: var(--nox-blue-dark);
 }
 
+/* ── Modelos guardados ──────────────────────────────────── */
+.template-store-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 6px;
+}
+.template-store-row select,
+.template-store-row input[type="text"] {
+  flex: 1;
+  min-width: 0;
+  padding: 7px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-family: var(--font-body);
+  font-size: 13px;
+}
+.template-store-row button {
+  font-size: 11px;
+  padding: 6px 10px;
+  white-space: nowrap;
+}
+.template-store-row button:disabled,
+.template-store-row select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.template-store-hint {
+  font-size: 11px;
+  color: #888;
+  margin: 6px 0 0 0;
+  font-family: var(--font-body);
+}
+
 .custom-field-row {
   display: flex;
   gap: 8px;
