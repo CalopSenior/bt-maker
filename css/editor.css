@@ -49,10 +49,24 @@
   color: #c0392b;
 }
 
-/* O título do campo é editável: sinaliza isso discretamente */
+/* O título do campo passou a ser editável, mas a classe .editable aparece
+   depois de .section-title no style.css e, com a mesma especificidade, os seus
+   `border` e `padding` genéricos venciam e destruíam a pílula. Repõe-se aqui
+   com especificidade maior. */
+.section-title.editable {
+  border: 2px solid var(--nox-blue-dark);
+  border-radius: 20px;
+  padding: 1px 12px;
+}
+/* Sinaliza que é editável sem apagar a moldura */
 .section-title.editable:hover {
   background-color: #f5f8ff;
-  border-color: transparent;
+  border-style: dashed;
+}
+.section-title.editable:focus {
+  border-color: var(--nox-cyan);
+  border-style: solid;
+  background-color: #ffffff;
 }
 
 /* ── Selector de campos ─────────────────────────────────── */
