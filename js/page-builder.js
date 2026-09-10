@@ -178,10 +178,10 @@ export const PageBuilder = {
     // VERIFICAÇÃO ADICIONADA: Checa se é uma string ("tinta") ou um array (vários campos)
     if (typeof customSchema === "string") {
       const presetFields = PageBuilder.PRESETS[customSchema] || [];
-      // Filtra os campos completos da lista mestre para usar
-      schema = PageBuilder.ALL_FIELDS.filter((field) =>
-        presetFields.includes(field.field),
-      );
+      // Respeita a ordem declarada na predefinição, não a da lista mestre
+      schema = presetFields
+        .map((name) => PageBuilder.ALL_FIELDS.find((f) => f.field === name))
+        .filter(Boolean);
     } else if (Array.isArray(customSchema)) {
       // Se já for o array que a IA mandou com os checkboxes, usa direto
       schema = customSchema;
@@ -225,6 +225,50 @@ export const PageBuilder = {
     });
   },
 
+  /**
+   * Lê as páginas atualmente montadas e devolve o esquema (ordem e definição
+   * dos campos) junto com o conteúdo já editado pelo utilizador.
+   * É o que permite adicionar, remover ou reordenar campos sem perder texto.
+   */
+  captureState: () => {
+    const schema = [];
+    const data = {};
+
+    document.querySelectorAll("#pages-container .section-block").forEach((block) => {
+      const body = block.querySelector(".section-body");
+      const title = block.querySelector(".section-title");
+      if (!body || !title) return;
+
+      const field = body.getAttribute("data-ai-field") || block.dataset.blockField;
+      if (!field) return;
+
+      const section = {
+        field,
+        type: block.dataset.blockType || "text",
+        title: title.innerHTML.trim(),
+      };
+      if (block.dataset.blockIcon) section.icon = block.dataset.blockIcon;
+      if (block.dataset.blockBg) section.bg = block.dataset.blockBg;
+      if (block.dataset.blockBorder) section.border = block.dataset.blockBorder;
+      if (block.dataset.blockCustom) section.custom = true;
+
+      schema.push(section);
+
+      // O placeholder não deve ser preservado como se fosse conteúdo real
+      const html = body.innerHTML.trim();
+      if (html && !html.includes("Informação não encontrada")) {
+        data[field] = html;
+      }
+    });
+
+    const productTitle = document
+      .querySelector("#pages-container .product-bar")
+      ?.innerHTML.trim();
+    if (productTitle) data.product_title = productTitle;
+
+    return { schema, data };
+  },
+
   createPage: (pageNum, title) => {
     const tpl = document
       .getElementById("tpl-page-base")
@@ -262,7 +306,21 @@ export const PageBuilder = {
     }
 
     const block = tpl.querySelector(".section-block");
-    tpl.querySelector(".section-title").innerHTML = section.title;
+
+    // Guarda a definição do bloco no próprio DOM para que a edição manual
+    // consiga reconstruir o esquema a partir da página (ver captureState).
+    block.dataset.blockType = section.type;
+    block.dataset.blockField = section.field;
+    if (section.icon) block.dataset.blockIcon = section.icon;
+    if (section.bg) block.dataset.blockBg = section.bg;
+    if (section.border) block.dataset.blockBorder = section.border;
+    if (section.custom) block.dataset.blockCustom = "1";
+
+    // O título do campo é editável diretamente na div
+    const titleEl = tpl.querySelector(".section-title");
+    titleEl.innerHTML = section.title;
+    titleEl.classList.add("editable");
+    titleEl.setAttribute("contenteditable", "true");
 
     const editableArea = tpl.querySelector(".section-body");
     editableArea.setAttribute("data-ai-field", section.field);
