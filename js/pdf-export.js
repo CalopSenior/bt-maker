@@ -197,11 +197,23 @@ export const PdfExport = {
             }
         });
 
+        // Marcadores de lista vêm do ::marker do CSS, que não é conteúdo do DOM
+        // e por isso não apareceria na camada de texto. Sem eles, copiar uma
+        // lista — ou reimportar o PDF — perde a sua estrutura.
+        const markedItems = new Set();
+
         for (let node = walker.nextNode(); node; node = walker.nextNode()) {
             const fontSizePx = parseFloat(getComputedStyle(node.parentElement).fontSize) || 0;
             const chars = node.textContent;
             const range = document.createRange();
             let line = null;
+
+            const item = node.parentElement.closest('li');
+            let prefix = '';
+            if (item && !markedItems.has(item)) {
+                markedItems.add(item);
+                prefix = '• ';
+            }
 
             for (let i = 0; i < chars.length; i++) {
                 range.setStart(node, i);
@@ -217,7 +229,8 @@ export const PdfExport = {
                 const isNewLine = !line || Math.abs(rect.top - line.top) > 1;
                 if (isNewLine) {
                     line = {
-                        text: '',
+                        // Só a primeira linha do item leva o marcador
+                        text: line ? '' : prefix,
                         top: rect.top,
                         left: rect.left,
                         // Aproximação da linha de base dentro da caixa de linha
