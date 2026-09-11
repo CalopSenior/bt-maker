@@ -10,6 +10,7 @@
  */
 
 import { FdsBuilder } from "./fds-builder.js";
+import { withAppendix } from "./fds-schema.js";
 
 const RETRY_DELAYS = [1000, 2000, 4000, 8000, 16000];
 
@@ -91,7 +92,7 @@ export const FdsAI = {
                 };
 
                 button.textContent = "🏗️ A montar o documento...";
-                FdsBuilder.build(data, schema);
+                FdsBuilder.build(data, withAppendix(schema));
 
                 alert("Ficha gerada com sucesso. Reveja todas as secções antes de publicar.");
             } catch (err) {
@@ -111,7 +112,8 @@ export const FdsAI = {
         if (!container) return;
 
         container.innerHTML = "";
-        FdsBuilder.ALL_FIELDS.forEach(section => {
+        // O anexo de legendas é texto fixo da norma: não há nada a extrair
+        FdsAI.sections().forEach(section => {
             const label = document.createElement("label");
             label.className = "picker-field";
 
@@ -129,6 +131,9 @@ export const FdsAI = {
         });
     },
 
+    /** Secções que a IA pode preencher (tudo menos os anexos fixos). */
+    sections: () => FdsBuilder.ALL_FIELDS.filter(section => section.type !== "appendix"),
+
     applyPreset(name) {
         const preset = name === "clear" ? [] : FdsBuilder.PRESETS[name] || [];
         document.querySelectorAll(".fds-ai-checkbox").forEach(checkbox => {
@@ -140,7 +145,7 @@ export const FdsAI = {
         const checked = Array.from(document.querySelectorAll(".fds-ai-checkbox:checked")).map(
             checkbox => checkbox.value
         );
-        return FdsBuilder.ALL_FIELDS.filter(section => checked.includes(section.field));
+        return FdsAI.sections().filter(section => checked.includes(section.field));
     },
 
     fileToBase64: file =>

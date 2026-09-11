@@ -293,13 +293,22 @@ export const FDS_SECTIONS = [
         field: "section16_outras_informacoes",
         type: "text",
         title: "OUTRAS INFORMAÇÕES",
-        promptDesc: "Observações finais, referências e legendas.",
-        subsections: [
-            { num: null, title: null },
-            { num: 1, title: "Legendas e abreviaturas", html: abreviaturasTable() }
-        ]
+        promptDesc: "Observações finais e referências.",
+        subsections: [{ num: null, title: null }]
+    },
+    {
+        // Fecha o documento, como no fds-maker. Não é uma das 16 secções: leva
+        // o seu próprio número (16.1) e por isso fica de fora da numeração
+        // automática — ver `type: "appendix"` no FdsBuilder.
+        field: "abreviaturas",
+        type: "appendix",
+        title: "16.1. Legendas e abreviaturas",
+        subsections: [{ num: null, title: null, html: abreviaturasTable() }]
     }
 ];
+
+/** Campo do anexo de legendas, que fecha sempre o documento. */
+export const APPENDIX_FIELD = "abreviaturas";
 
 /** Predefinições de montagem rápida. */
 export const FDS_PRESETS = {
@@ -312,7 +321,8 @@ export const FDS_PRESETS = {
         "section5_combate_incendio",
         "section7_manuseio_armazenamento",
         "section8_controle_exposicao",
-        "section16_outras_informacoes"
+        "section16_outras_informacoes",
+        APPENDIX_FIELD
     ]
 };
 
@@ -321,13 +331,28 @@ export const findSection = field =>
     FDS_SECTIONS.find(section => section.field === field) || null;
 
 /**
- * Monta o esqueleto de uma secção: subtítulos numerados a partir da posição
- * que a secção ocupa no documento (`index` começa em 0).
+ * Garante que o anexo de legendas fecha o documento.
+ *
+ * Usado por tudo o que monta um esquema a partir de uma origem externa
+ * (importação de PDF, IA, ficheiro JSON): essas origens só conhecem as 16
+ * secções, e sem isto o documento sairia sem a tabela de siglas. Quem remove o
+ * anexo à mão na página não passa por aqui, por isso a remoção mantém-se.
  */
-export function skeletonFor(section, index) {
+export function withAppendix(schema) {
+    const lista = (schema || []).filter(Boolean);
+    if (lista.some(section => section.field === APPENDIX_FIELD)) return lista;
+
+    const anexo = findSection(APPENDIX_FIELD);
+    return anexo ? [...lista, anexo] : lista;
+}
+
+/**
+ * Monta o esqueleto de uma secção. `numero` é o número que a secção ocupa no
+ * documento, usado nos subtítulos (4.1, 4.2, ...); os anexos não levam número.
+ */
+export function skeletonFor(section, numero) {
     const master = findSection(section.field) || section;
     const subsections = master.subsections || [];
-    const numero = index + 1;
 
     if (subsections.length === 0) {
         return '<p class="fds-placeholder">(preencher)</p>';

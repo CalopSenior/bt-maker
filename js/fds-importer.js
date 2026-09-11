@@ -13,7 +13,7 @@
 
 import { BtImporter } from "./bt-importer.js";
 import { FdsBuilder, hoje } from "./fds-builder.js";
-import { FDS_SECTIONS } from "./fds-schema.js";
+import { FDS_SECTIONS, APPENDIX_FIELD, withAppendix } from "./fds-schema.js";
 
 /** Cabeçalho, rodapé e outras linhas que não pertencem a nenhuma secção. */
 const NOISE = [
@@ -50,12 +50,17 @@ const normalize = text =>
 const escapeHtml = text =>
     String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
-/** Títulos conhecidos, já normalizados, na ordem oficial. */
-const KNOWN = FDS_SECTIONS.map((section, index) => ({
-    number: index + 1,
-    key: normalize(section.title),
-    section
-}));
+/** Títulos conhecidos, já normalizados, na ordem oficial (sem o anexo). */
+const KNOWN = FDS_SECTIONS.filter(section => section.field !== APPENDIX_FIELD).map(
+    (section, index) => ({
+        number: index + 1,
+        key: normalize(section.title),
+        section
+    })
+);
+
+/** O PDF de origem já traz a sua própria tabela de legendas? */
+const LEGENDAS = /legendas?\s+e\s+abreviaturas/i;
 
 /**
  * Compara dois títulos tolerando variações de redacção entre fabricantes:
@@ -126,7 +131,12 @@ export const FdsImporter = {
             throw new Error("Não foi reconhecida nenhuma secção de FDS neste PDF.");
         }
 
-        FdsBuilder.build(data, schema);
+        // A tabela de legendas fecha sempre a ficha, mesmo quando o PDF de
+        // origem não a traz — a menos que ele já a tenha trazido no texto.
+        const jaTemLegendas = Object.values(data).some(
+            valor => typeof valor === "string" && LEGENDAS.test(valor)
+        );
+        FdsBuilder.build(data, jaTemLegendas ? schema : withAppendix(schema));
 
         return {
             seccoes: schema.length,
