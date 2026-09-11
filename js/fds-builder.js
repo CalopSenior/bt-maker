@@ -59,8 +59,15 @@ export const FdsBuilder = {
             pages.push(page);
         };
 
-        schema.forEach((section, index) => {
-            const block = FdsBuilder.createBlock(section, data, index);
+        // Os anexos (a tabela de legendas) ficam fora da numeração das secções
+        let numero = 0;
+
+        schema.forEach(section => {
+            const block = FdsBuilder.createBlock(
+                section,
+                data,
+                section.type === "appendix" ? null : ++numero
+            );
 
             if (section.pageBreak && content.children.length > 0) novaPagina();
 
@@ -105,10 +112,14 @@ export const FdsBuilder = {
     /**
      * Cria o bloco de uma secção. O corpo leva o conteúdo já existente ou, se
      * não houver, o esqueleto da secção (subtítulos numerados e tabelas).
+     *
+     * @param {number|null} numero posição da secção no documento; `null` nos
+     *                             anexos, que trazem o seu próprio número.
      */
-    createBlock(section, data, index) {
+    createBlock(section, data, numero) {
         const fragment = document.getElementById("tpl-fds-block").content.cloneNode(true);
         const block = fragment.querySelector(".section-block");
+        const anexo = section.type === "appendix";
 
         block.dataset.fdsField = section.field;
         block.dataset.blockType = section.type || "text";
@@ -116,7 +127,9 @@ export const FdsBuilder = {
         if (section.pageBreak) block.dataset.pageBreak = "1";
 
         const titleEl = block.querySelector(".fds-section-title");
-        titleEl.innerHTML = `${index + 1}. ${FdsBuilder.baseTitle(section)}`;
+        const titulo = FdsBuilder.baseTitle(section);
+        titleEl.innerHTML = anexo ? titulo : `${numero}. ${titulo}`;
+        if (anexo) titleEl.classList.add("fds-appendix-title");
 
         const body = block.querySelector(".fds-section-body");
         body.setAttribute("data-fds-field", section.field);
@@ -124,16 +137,20 @@ export const FdsBuilder = {
         const conteudo = data && data[section.field];
         body.innerHTML = conteudo
             ? sectionHtmlFromValue(conteudo)
-            : skeletonFor(section, index);
+            : skeletonFor(section, numero);
 
-        FdsBuilder.renumberBody(body, index + 1);
+        if (!anexo) FdsBuilder.renumberBody(body, numero);
         return block;
     },
 
-    /** Título da secção sem a numeração, venha ele do esquema ou da página. */
+    /**
+     * Título da secção sem a numeração, venha ele do esquema ou da página.
+     * O número dos anexos faz parte do título (16.1) e não é removido.
+     */
     baseTitle(section) {
         const master = findSection(section.field);
         const titulo = section.title || master?.title || "NOVA SECÇÃO";
+        if (section.type === "appendix") return String(titulo);
         return String(titulo).replace(/^\s*\d+\s*[.)-]\s*/, "");
     },
 
@@ -174,10 +191,15 @@ export const FdsBuilder = {
             const field = block.dataset.fdsField;
             if (!body || !title || !field) return;
 
+            const tipo = block.dataset.blockType || "text";
+            const texto = title.innerHTML.trim();
+
             const section = {
                 field,
-                type: block.dataset.blockType || "text",
-                title: title.innerHTML.trim().replace(/^\s*\d+\s*[.)-]\s*/, "")
+                type: tipo,
+                // O "16.1." do anexo faz parte do título; o "4." de uma secção
+                // é numeração e é reposto na montagem seguinte.
+                title: tipo === "appendix" ? texto : texto.replace(/^\s*\d+\s*[.)-]\s*/, "")
             };
             if (block.dataset.blockCustom) section.custom = true;
             if (block.dataset.pageBreak) section.pageBreak = true;

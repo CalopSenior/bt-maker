@@ -10,7 +10,7 @@ import { FdsBuilder, hoje } from "./fds-builder.js";
 import { FdsFieldManager } from "./fds-fields.js";
 import { FdsImporter } from "./fds-importer.js";
 import { FdsAI } from "./fds-ai.js";
-import { GHS_PICTOGRAMS, ghsImage } from "./fds-schema.js";
+import { GHS_PICTOGRAMS, ghsImage, withAppendix } from "./fds-schema.js";
 import { PdfExport } from "./pdf-export.js";
 import { IaToggle } from "./ia-toggle.js";
 
@@ -260,8 +260,8 @@ const StorageManager = {
         const seccoes = Object.keys(dados).filter(chave => /^section\d+_/.test(chave));
 
         if (seccoes.length > 0) {
-            const schema = FdsBuilder.ALL_FIELDS.filter(section =>
-                seccoes.includes(section.field)
+            const schema = withAppendix(
+                FdsBuilder.ALL_FIELDS.filter(section => seccoes.includes(section.field))
             );
 
             dados._doc = {
@@ -272,7 +272,7 @@ const StorageManager = {
 
             FdsBuilder.build(dados, schema);
             UI.syncFromDocument(dados._doc);
-            alert(`Ficha carregada com ${schema.length} secção(ões).`);
+            alert(`Ficha carregada com ${seccoes.length} secção(ões).`);
             return;
         }
 

@@ -134,6 +134,13 @@
   margin: 0 0 12px 0;
 }
 
+/* O anexo de legendas fecha o documento com o título ao centro */
+.page-fds .fds-section-title.fds-appendix-title {
+  text-align: center;
+  margin-top: 20px;
+  margin-bottom: 15px;
+}
+
 .page-fds .fds-section-body {
   font-size: 0.85rem;
   line-height: 1.4;

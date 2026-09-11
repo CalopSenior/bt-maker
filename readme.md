@@ -30,8 +30,12 @@ A FDS segue o mesmo layout de arquivo do projeto `fds-maker` — cabeçalho azul
 "FDS / FICHA DE DADOS DE SEGURANÇA", faixa da norma, as 16 seções da ABNT NBR
 14725:2023 e rodapé "PÁGINA x/y" — com a usabilidade do bt-maker:
 
-- Documento novo já nasce com o esqueleto das 16 seções (subtítulos numerados,
-  tabela de composição e tabela de legendas e abreviaturas da seção 16).
+- Documento novo já nasce com o esqueleto das 16 seções (subtítulos numerados e
+  tabela de composição).
+- A tabela **16.1. Legendas e abreviaturas** fecha sempre o documento, como no
+  `fds-maker`. É um bloco próprio — fica fora da numeração das seções, mas pode
+  ser editado, movido ou removido como qualquer outro; e é reposto ao importar
+  um PDF, gerar por IA ou abrir dados vindos do `fds-maker`.
 - Cada seção tem controlos ao passar o rato: **✂** força uma quebra de página
   antes dela, **▲ ▼** reordenam e **✕** remove. A numeração das seções e dos
   subtítulos é recalculada sozinha.
