@@ -6,14 +6,22 @@
  * inclui o conteúdo preenchido: carregar um modelo dá sempre um documento em
  * branco com a estrutura desejada.
  *
+ * Cada tipo de documento tem o seu próprio armazém: os modelos do boletim
+ * técnico e os da ficha de dados de segurança nunca se misturam na mesma lista.
+ *
  * O IndexedDB pode estar indisponível (navegação privada, permissões), por isso
  * todas as operações devolvem promessas que rejeitam com uma mensagem legível
  * em vez de falharem em silêncio.
  */
 
 const DB_NAME = 'noxcor-bt-maker';
-const DB_VERSION = 1;
-const STORE = 'templates';
+const DB_VERSION = 2;
+
+/** Um armazém por tipo de documento. */
+const STORES = {
+    bt: 'templates',
+    fds: 'fds-templates'
+};
 
 /** Únicas propriedades de um campo que fazem parte de um modelo. */
 const FIELD_KEYS = ['field', 'type', 'title', 'icon', 'bg', 'border', 'custom'];
@@ -33,9 +41,11 @@ function openDb() {
 
         request.onupgradeneeded = () => {
             const db = request.result;
-            if (!db.objectStoreNames.contains(STORE)) {
-                db.createObjectStore(STORE, { keyPath: 'name' });
-            }
+            Object.values(STORES).forEach(store => {
+                if (!db.objectStoreNames.contains(store)) {
+                    db.createObjectStore(store, { keyPath: 'name' });
+                }
+            });
         };
 
         request.onsuccess = () => resolve(request.result);
@@ -49,12 +59,12 @@ function openDb() {
     return dbPromise;
 }
 
-async function transact(mode, run) {
+async function transact(store, mode, run) {
     const db = await openDb();
 
     return new Promise((resolve, reject) => {
-        const tx = db.transaction(STORE, mode);
-        const request = run(tx.objectStore(STORE));
+        const tx = db.transaction(store, mode);
+        const request = run(tx.objectStore(store));
 
         tx.onabort = () => reject(tx.error || new Error('Operação cancelada.'));
         tx.onerror = () => reject(tx.error || new Error('Erro na base de dados local.'));
@@ -62,51 +72,66 @@ async function transact(mode, run) {
     });
 }
 
-export const TemplateStore = {
-    /**
-     * Reduz um esquema ao essencial de um modelo, descartando qualquer
-     * conteúdo que porventura venha agarrado às definições dos campos.
-     */
-    stripContent(schema) {
-        return (schema || []).map(section =>
-            FIELD_KEYS.reduce((clean, key) => {
-                if (section[key] !== undefined) clean[key] = section[key];
-                return clean;
-            }, {})
-        );
-    },
+/**
+ * Cria a interface de modelos para um tipo de documento.
+ * @param {string} kind Chave de STORES ('bt' para o boletim, 'fds' para a ficha).
+ */
+function createStore(kind) {
+    const storeName = STORES[kind];
+    if (!storeName) throw new Error(`Tipo de documento desconhecido: ${kind}`);
 
-    /**
-     * Grava (ou substitui) um modelo com o nome dado.
-     */
-    async save(name, schema) {
-        const trimmed = String(name || '').trim();
-        if (!trimmed) throw new Error('Dê um nome ao modelo.');
+    return {
+        /**
+         * Reduz um esquema ao essencial de um modelo, descartando qualquer
+         * conteúdo que porventura venha agarrado às definições dos campos.
+         */
+        stripContent(schema) {
+            return (schema || []).map(section =>
+                FIELD_KEYS.reduce((clean, key) => {
+                    if (section[key] !== undefined) clean[key] = section[key];
+                    return clean;
+                }, {})
+            );
+        },
 
-        const fields = TemplateStore.stripContent(schema);
-        if (fields.length === 0) throw new Error('O modelo não tem campos.');
+        /**
+         * Grava (ou substitui) um modelo com o nome dado.
+         */
+        async save(name, schema) {
+            const trimmed = String(name || '').trim();
+            if (!trimmed) throw new Error('Dê um nome ao modelo.');
 
-        await transact('readwrite', store =>
-            store.put({ name: trimmed, fields, updatedAt: Date.now() })
-        );
+            const fields = this.stripContent(schema);
+            if (fields.length === 0) throw new Error('O modelo não tem campos.');
 
-        return trimmed;
-    },
+            await transact(storeName, 'readwrite', store =>
+                store.put({ name: trimmed, fields, updatedAt: Date.now() })
+            );
 
-    /** Devolve todos os modelos, do mais recente para o mais antigo. */
-    async list() {
-        const all = await transact('readonly', store => store.getAll());
-        return (all || []).sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
-    },
+            return trimmed;
+        },
 
-    /** Devolve um modelo pelo nome, ou null se não existir. */
-    async get(name) {
-        const found = await transact('readonly', store => store.get(String(name)));
-        return found || null;
-    },
+        /** Devolve todos os modelos, do mais recente para o mais antigo. */
+        async list() {
+            const all = await transact(storeName, 'readonly', store => store.getAll());
+            return (all || []).sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+        },
 
-    /** Remove um modelo. */
-    async remove(name) {
-        await transact('readwrite', store => store.delete(String(name)));
-    }
-};
+        /** Devolve um modelo pelo nome, ou null se não existir. */
+        async get(name) {
+            const found = await transact(storeName, 'readonly', store => store.get(String(name)));
+            return found || null;
+        },
+
+        /** Remove um modelo. */
+        async remove(name) {
+            await transact(storeName, 'readwrite', store => store.delete(String(name)));
+        }
+    };
+}
+
+/** Modelos do boletim técnico. */
+export const TemplateStore = createStore('bt');
+
+/** Modelos da ficha de dados de segurança. */
+export const FdsTemplateStore = createStore('fds');

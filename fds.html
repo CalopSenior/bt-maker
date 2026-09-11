@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de FDS - NOX Cor</title>
+
+    <!-- Dependências Externas -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+        if (window.pdfjsLib) {
+            window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+                'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        }
+    </script>
+
+    <!-- GOOGLE FONTS (mesmo conjunto do BT) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Jost:wght@700&family=Montserrat:wght@900&family=Nunito:wght@400;600;700&family=Titillium+Web:wght@600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- CSS — base + exclusivo da ficha de dados de segurança -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/modal.css">
+    <link rel="stylesheet" href="css/editor.css">
+    <link rel="stylesheet" href="css/fds.css">
+</head>
+
+<body class="doc-fds">
+
+    <!-- ══════════ BARRA DE CONTROLOS ══════════ -->
+    <div class="controls no-print">
+        <div class="toolbar">
+            <button data-command="bold" title="Negrito"><b>B</b></button>
+            <button data-command="italic" title="Itálico"><i>I</i></button>
+            <button data-command="underline" title="Sublinhado"><u>U</u></button>
+            <button data-command="insertUnorderedList" title="Lista com marcadores">●</button>
+            <button id="btn-add-row" title="Acrescentar linha à tabela onde está o cursor">+ Linha</button>
+            <button id="btn-ghs" title="Inserir pictograma GHS no ponto do cursor">GHS</button>
+        </div>
+
+        <div class="template-selector">
+            <label>Gerar Nova:</label>
+            <select id="fds-template-type">
+                <option value="completa">FDS completa (16 seções)</option>
+                <option value="resumida">Rascunho rápido (8 seções)</option>
+            </select>
+            <button id="btn-fds-apply-template" style="background-color: var(--nox-orange);">Aplicar Modelo</button>
+            <button id="btn-fds-fields" title="Escolher quais seções existem no documento">Seções do Modelo</button>
+            <button id="btn-fds-add-field" class="secondary" title="Acrescentar uma seção ao documento">+ Seção</button>
+        </div>
+
+        <div class="fds-doc-fields">
+            <label for="fds-product-name">Produto:</label>
+            <input type="text" id="fds-product-name" placeholder="Nome do produto (usado no nome do PDF)">
+            <label for="fds-revision-date">Revisão:</label>
+            <input type="date" id="fds-revision-date">
+        </div>
+
+        <div style="width: 1px; height: 30px; background-color: #ccc; margin: 0 10px;"></div>
+
+        <div class="actions" style="display: flex; gap: 8px; align-items: center;">
+            <a href="index.html" class="btn-doc-link" title="Ir para o Boletim Técnico">📄 Boletim Técnico</a>
+            <a href="ficha-emergencia.html" class="btn-doc-link btn-doc-link-danger"
+                title="Ir para a Ficha de Emergência">🚨 Ficha de Emergência</a>
+            <button id="btn-save-project" class="secondary" title="Salvar Projeto (JSON)">💾 Salvar</button>
+            <button id="btn-load-project" class="secondary" title="Carregar Projeto (JSON)">📂 Abrir</button>
+            <input type="file" id="file-input" style="display: none;" accept=".json">
+            <button id="btn-fds-import" class="secondary"
+                title="Ler uma FDS em PDF e preencher as seções (sem IA)">📥 Importar PDF</button>
+            <input type="file" id="file-input-fds-pdf" style="display: none;" accept=".pdf">
+            <!-- Oculto por omissão: activa-se com __USE_IA__ = true na consola do navegador -->
+            <button id="btn-fds-ai" class="secondary" title="Preencher com IA" hidden
+                style="background-color: #673ab7; font-weight: bold;">✨ Extração IA</button>
+            <input type="file" id="file-input-fds-ai" style="display: none;" accept=".pdf">
+            <button id="btn-export-pdf" title="Gerar PDF idêntico ao que está na tela">🖨️ Gerar PDF</button>
+        </div>
+    </div>
+
+    <!-- ══════════ CONTAINER DAS PÁGINAS ══════════ -->
+    <div id="pages-container"></div>
+
+    <!-- ══════════ TEMPLATES ATÓMICOS (usados pelo FdsBuilder) ══════════ -->
+    <div id="templates-repository" style="display: none;">
+
+        <!-- Folha A4 da FDS: cabeçalho, corpo e rodapé numerado -->
+        <template id="tpl-fds-page">
+            <div class="page page-fds">
+                <div class="fds-header">
+                    <div class="fds-header-top">
+                        <div class="header-left">
+                            <div class="header-title-lg">FDS</div>
+                            <div class="header-subtitle-sm">FICHA DE DADOS DE SEGURANÇA</div>
+                        </div>
+                        <div class="header-right">
+                            <div class="header-brand-lg editable" contenteditable="true" data-fds-doc="brand">NOX COR
+                            </div>
+                            <div class="header-date-sm">DATA REVISÃO:
+                                <span class="editable" contenteditable="true" data-fds-doc="revision_date">—</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="fds-header-bottom editable" contenteditable="true" data-fds-doc="norm">
+                        (Em conformidade com ABNT NBR 14725:2023)
+                    </div>
+                </div>
+
+                <div class="fds-content page-content"></div>
+
+                <div class="fds-footer">PÁGINA <span class="page-num">1</span>/<span class="page-total">1</span></div>
+            </div>
+        </template>
+
+        <!-- Bloco de uma seção: título e corpo, ambos editáveis -->
+        <template id="tpl-fds-block">
+            <div class="section-block fds-section">
+                <h3 class="fds-section-title editable" contenteditable="true"></h3>
+                <div class="fds-section-body editable" contenteditable="true"></div>
+            </div>
+        </template>
+
+    </div>
+
+    <!-- ══════════ MODAL: SEÇÕES DO DOCUMENTO ══════════ -->
+    <div id="fds-fields-modal" class="modal-overlay">
+        <div class="modal" style="max-width: 620px; max-height: 90vh; overflow-y: auto;">
+            <h3>Seções do Documento</h3>
+            <p style="font-size: 12px; color: #666; margin-bottom: 10px;">
+                Marque as seções que devem existir na ficha. As seções já preenchidas mantêm o seu conteúdo, e a
+                ordem actual é preservada — as novas entram no fim. A numeração é recalculada sozinha.
+            </p>
+
+            <div class="form-group">
+                <label for="fds-saved-templates">Meus modelos (guardados neste navegador):</label>
+                <div class="template-store-row">
+                    <select id="fds-saved-templates" disabled>
+                        <option value="">(nenhum modelo guardado)</option>
+                    </select>
+                    <button id="btn-fds-load-template" disabled>Carregar</button>
+                    <button id="btn-fds-delete-template" class="secondary" disabled>Apagar</button>
+                </div>
+                <div class="template-store-row">
+                    <input type="text" id="fds-template-name" placeholder="Nome do modelo (ex.: Tinta epóxi 2C)">
+                    <button id="btn-fds-save-template">Salvar Modelo</button>
+                </div>
+                <p class="template-store-hint">
+                    Um modelo guarda apenas as seções e a sua ordem — nunca o conteúdo preenchido.
+                </p>
+            </div>
+
+            <div class="form-group" style="margin-top: 12px;">
+                <label>Predefinições:</label>
+                <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                    <button id="btn-fds-preset-completa" style="font-size: 10px; padding: 4px 8px;">Completa</button>
+                    <button id="btn-fds-preset-resumida" style="font-size: 10px; padding: 4px 8px;">Rascunho</button>
+                    <button id="btn-fds-preset-clear" class="secondary"
+                        style="font-size: 10px; padding: 4px 8px;">Limpar Tudo</button>
+                </div>
+
+                <div id="fds-picker-fields"
+                    style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px; background: #f9f9f9; padding: 10px; border: 1px solid #ddd; border-radius: 4px; max-height: 260px; overflow-y: auto;">
+                    <!-- Renderizado pelo fds-fields.js -->
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-top: 12px;">
+                <label for="fds-custom-field-title">Seção personalizada:</label>
+                <div class="custom-field-row">
+                    <input type="text" id="fds-custom-field-title" placeholder="Nome da seção (ex.: ANEXO GHS)">
+                    <button id="btn-fds-picker-add-custom" style="font-size: 11px; padding: 6px 10px;">Criar</button>
+                </div>
+            </div>
+
+            <div class="modal-actions" style="margin-top: 20px;">
+                <button id="btn-fds-picker-cancel" class="btn-cancel">Cancelar</button>
+                <button id="btn-fds-picker-apply" style="background-color: var(--nox-blue-dark); color: white;">
+                    Aplicar Seções</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════ MODAL: LEGENDA E INSERÇÃO DE PICTOGRAMAS GHS ══════════ -->
+    <div id="ghs-modal" class="modal-overlay">
+        <div class="modal" style="max-width: 640px; max-height: 90vh; overflow-y: auto;">
+            <h3>Pictogramas GHS</h3>
+            <p style="font-size: 12px; color: #666;">
+                Clique num pictograma para o inserir no ponto onde estava o cursor. Nos textos importados ou
+                gerados por IA também funciona a notação curta <code>{alt+2}</code>.
+            </p>
+
+            <div id="ghs-grid" class="ghs-grid"><!-- Renderizado pelo fds-main.js --></div>
+
+            <div class="modal-actions">
+                <button id="btn-ghs-close" class="btn-cancel">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════ MODAL: EXTRAÇÃO POR IA (oculto por omissão) ══════════ -->
+    <div id="fds-ai-modal" class="modal-overlay">
+        <div class="modal" style="max-width: 650px; max-height: 90vh; overflow-y: auto;">
+            <h3>Extração de FDS por IA</h3>
+            <p style="font-size: 12px; color: #666; margin-bottom: 10px;">
+                Selecione as seções que a IA deve buscar no PDF. Reveja sempre o resultado: uma FDS é um
+                documento legal.
+            </p>
+
+            <div class="form-group">
+                <label for="fds-ai-model">Modelo de Processamento:</label>
+                <select id="fds-ai-model">
+                    <option value="gemini-3-flash-preview" selected>Gemini 3 Flash Preview (Padrão)</option>
+                    <option value="gemini-3-pro-preview">Gemini 3 Pro Preview</option>
+                    <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
+                    <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+                </select>
+            </div>
+
+            <div class="form-group" style="margin-top: 10px;">
+                <label>Seções a Extrair:</label>
+                <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                    <button id="btn-fds-ai-preset-completa" style="font-size: 10px; padding: 4px 8px;">Completa</button>
+                    <button id="btn-fds-ai-preset-resumida" style="font-size: 10px; padding: 4px 8px;">Rascunho</button>
+                    <button id="btn-fds-ai-preset-clear" class="secondary"
+                        style="font-size: 10px; padding: 4px 8px;">Limpar Tudo</button>
+                </div>
+
+                <div id="fds-ai-fields"
+                    style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px; background: #f9f9f9; padding: 10px; border: 1px solid #ddd; border-radius: 4px; max-height: 180px; overflow-y: auto;">
+                    <!-- Renderizado pelo fds-ai.js -->
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-top: 10px;">
+                <label for="fds-ai-product">Forçar Nome do Produto (Opcional):</label>
+                <input type="text" id="fds-ai-product" placeholder="Deixe em branco para a IA detectar no PDF">
+            </div>
+
+            <div class="form-group" style="margin-top: 10px;">
+                <label for="fds-ai-extra">Instruções Extras para a IA (Opcional):</label>
+                <textarea id="fds-ai-extra" rows="3"
+                    placeholder="Ex: Substitua a marca X pela marca Y. Use o telefone de emergência (24) 3016 4937."
+                    style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-family: inherit; font-size: 13px; resize: vertical;"></textarea>
+            </div>
+
+            <div class="modal-actions" style="margin-top: 20px;">
+                <button id="btn-fds-ai-cancel" class="btn-cancel">Cancelar</button>
+                <button id="btn-fds-ai-confirm" style="background-color: #673ab7; color: white;">
+                    ✨ Gerar Ficha</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CARREGAMENTO DO FICHEIRO EXTERNO JAVASCRIPT -->
+    <script type="module" src="js/fds-main.js"></script>
+
+</body>
+
+</html>
