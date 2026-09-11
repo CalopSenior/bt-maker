@@ -1,0 +1,336 @@
+/* ========================================================
+   FICHA DE DADOS DE SEGURANÇA (FDS)
+   Mesmo desenho de folha do fds-maker — cabeçalho azul,
+   faixa da norma e rodapé numerado — com os controlos de
+   edição directa nas divs que o boletim técnico usa.
+   ======================================================== */
+
+:root {
+  --fds-blue: #000b6e; /* Cabeçalho e rodapé */
+  --fds-blue-light: #5b8ec4; /* Faixa da norma */
+}
+
+/* ── Folha ────────────────────────────────────────────── */
+.page.page-fds {
+  width: 210mm;
+  height: 297mm;
+  min-height: 297mm;
+  padding: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  font-family: Arial, Helvetica, sans-serif;
+  line-height: 1.4;
+  color: #000;
+}
+
+/* A FDS é composta inteiramente em Arial, incluindo os destaques: as fontes
+   de marca do boletim técnico não entram neste documento. */
+.page-fds strong,
+.page-fds b,
+.page-fds th {
+  font-family: inherit;
+  letter-spacing: 0;
+}
+
+/* ── Cabeçalho ────────────────────────────────────────── */
+.page-fds .fds-header {
+  width: 100%;
+  flex-shrink: 0;
+}
+
+.page-fds .fds-header-top {
+  background-color: var(--fds-blue);
+  color: white;
+  padding: 15px 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 100px;
+}
+
+.page-fds .header-left,
+.page-fds .header-right {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.page-fds .header-right {
+  text-align: right;
+  align-items: flex-end;
+}
+
+.page-fds .header-title-lg {
+  font-size: 3.8rem;
+  font-weight: 900;
+  font-style: italic;
+  line-height: 0.8;
+  letter-spacing: -1px;
+}
+
+.page-fds .header-subtitle-sm {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  font-weight: 600;
+  margin-top: 4px;
+  letter-spacing: 0.5px;
+}
+
+.page-fds .header-brand-lg {
+  font-size: 2.8rem;
+  font-weight: 900;
+  font-style: italic;
+  line-height: 0.9;
+  letter-spacing: -0.5px;
+}
+
+.page-fds .header-date-sm {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  margin-top: 4px;
+  opacity: 0.9;
+}
+
+.page-fds .fds-header-bottom {
+  background-color: var(--fds-blue-light);
+  color: white;
+  padding: 4px 40px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  font-style: italic;
+}
+
+/* Os campos do cabeçalho são editáveis sem perder o desenho da faixa */
+.page-fds .fds-header [contenteditable="true"] {
+  padding: 0 2px;
+  min-height: 0;
+}
+.page-fds .fds-header [contenteditable="true"]:hover {
+  background-color: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.6);
+  color: inherit;
+}
+.page-fds .fds-header [contenteditable="true"]:focus {
+  background-color: rgba(255, 255, 255, 0.28);
+  border-color: #fff;
+}
+
+/* ── Corpo ────────────────────────────────────────────── */
+.page-fds .fds-content {
+  flex: 1;
+  padding: 30px 40px;
+  overflow: hidden;
+}
+
+.page-fds .fds-section {
+  margin-bottom: 25px;
+}
+
+.page-fds .fds-section-title {
+  font-size: 1rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  margin: 0 0 12px 0;
+}
+
+.page-fds .fds-section-body {
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.page-fds .fds-section-body h4,
+.page-fds .fds-subtitle {
+  font-size: 0.9rem;
+  font-weight: 800;
+  margin: 10px 0 4px 0;
+}
+
+.page-fds .fds-section-body p {
+  margin: 0 0 8px 0;
+}
+
+.page-fds .fds-section-body ul {
+  margin: 0 0 8px 0;
+  padding-left: 20px;
+  list-style-type: disc;
+}
+
+/* Texto de exemplo: desaparece assim que se escreve por cima */
+.fds-placeholder {
+  color: #8a8a8a;
+  font-style: italic;
+}
+
+/* Pictogramas GHS dentro do documento */
+.ghs-picto {
+  width: 75px;
+  height: 75px;
+  vertical-align: middle;
+  margin: 5px;
+}
+
+.page-fds .ghs-row {
+  min-height: 20px;
+}
+
+/* ── Tabelas ──────────────────────────────────────────── */
+.page-fds .chemical-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 10px 0;
+  font-size: 0.85rem;
+}
+
+.page-fds .chemical-table th {
+  background-color: #f0f0f0;
+  font-weight: 700;
+  border: 1px solid #000;
+  text-align: left;
+  padding: 6px 8px;
+}
+
+.page-fds .chemical-table td {
+  border: 1px solid #000;
+  padding: 6px 8px;
+}
+
+.page-fds .chemical-table .abbr-key {
+  width: 15%;
+  font-weight: bold;
+}
+
+/* ── Rodapé ───────────────────────────────────────────── */
+.page-fds .fds-footer {
+  width: 100%;
+  background-color: var(--fds-blue);
+  color: white;
+  padding: 8px 40px;
+  text-align: right;
+  font-size: 0.7rem;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+/* ========================================================
+   CONTROLOS (apenas no ecrã)
+   ======================================================== */
+
+/* Seção que começa numa folha nova: o botão ✂ fica aceso */
+.block-tools button.active {
+  background-color: #eef2ff;
+  border-color: var(--nox-blue-dark);
+  color: var(--nox-blue-dark);
+}
+
+.fds-doc-fields {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-left: 1px solid #ccc;
+  padding-left: 15px;
+}
+.fds-doc-fields label {
+  font-size: 12px;
+  font-weight: bold;
+  font-family: var(--font-body);
+}
+.fds-doc-fields input {
+  padding: 7px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-family: var(--font-body);
+  font-size: 13px;
+}
+.fds-doc-fields input[type="text"] {
+  min-width: 210px;
+}
+
+.template-selector label {
+  font-size: 12px;
+  font-weight: bold;
+  font-family: var(--font-body);
+}
+
+/* Ligações para os outros documentos, com o aspecto dos botões */
+.btn-doc-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: bold;
+  background-color: var(--nox-blue-dark);
+  color: white;
+  border-radius: 5px;
+  text-decoration: none;
+  font-family: var(--font-body);
+  white-space: nowrap;
+  transition: background 0.2s;
+}
+.btn-doc-link:hover {
+  background-color: #002bb3;
+}
+.btn-doc-link-danger {
+  background-color: #c0392b;
+}
+.btn-doc-link-danger:hover {
+  background-color: #a33025;
+}
+
+/* Grelha de pictogramas do modal */
+.ghs-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.ghs-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 6px;
+  background: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #333;
+  font-size: 11px;
+  font-weight: 600;
+  text-align: center;
+}
+.ghs-item:hover {
+  background: #eef2ff;
+  border-color: var(--nox-blue-dark);
+  color: var(--nox-blue-dark);
+}
+.ghs-item img {
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+}
+
+/* ========================================================
+   IMPRESSÃO
+   ======================================================== */
+@media print {
+  .page.page-fds {
+    padding: 0;
+    height: 297mm;
+    overflow: hidden;
+  }
+
+  .page-fds .fds-header-top,
+  .page-fds .fds-header-bottom,
+  .page-fds .fds-footer {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .page-fds .fds-header [contenteditable="true"],
+  .page-fds .fds-header [contenteditable="true"]:hover,
+  .page-fds .fds-header [contenteditable="true"]:focus {
+    background: transparent !important;
+    border-color: transparent !important;
+  }
+}
