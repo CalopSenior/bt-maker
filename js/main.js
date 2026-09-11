@@ -8,6 +8,7 @@ import { PageBuilder } from "./page-builder.js";
 import { PdfExport } from "./pdf-export.js";
 import { FieldManager } from "./field-manager.js";
 import { IaToggle } from "./ia-toggle.js";
+import { BtImporter } from "./bt-importer.js";
 
 // --- SISTEMA DE LOGO GLOBAL ---
 document
@@ -148,6 +149,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Edição manual de campos (incluir / excluir / reordenar directamente nas divs)
   FieldManager.init();
+
+  // Importação de boletins em PDF por leitura de texto e regex (sem IA)
+  BtImporter.init();
 
   // A IA continua disponível, mas oculta: activa-se com __USE_IA__ = true na consola
   AIManager.init();
