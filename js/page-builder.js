@@ -325,8 +325,12 @@ export const PageBuilder = {
     const editableArea = tpl.querySelector(".section-body");
     editableArea.setAttribute("data-ai-field", section.field);
 
-    if (data && data[section.field]) {
-      editableArea.innerHTML = data[section.field];
+    // A IA nem sempre devolve HTML em string: um campo pode vir como lista
+    // ou objecto, e atribuí-lo em cru escrevia "[object Object]" na folha.
+    const html = PageBuilder.valueToHtml(data && data[section.field]);
+
+    if (html) {
+      editableArea.innerHTML = html;
     } else {
       editableArea.innerHTML =
         "<em>(Informação não encontrada ou aguardando preenchimento)</em>";
@@ -345,5 +349,45 @@ export const PageBuilder = {
     }
 
     return block;
+  },
+
+  /**
+   * Converte o valor de um campo em HTML utilizável, seja ele string, lista
+   * ou objecto. Devolve "" quando não há conteúdo, para o bloco mostrar o
+   * aviso de campo vazio em vez de texto sem sentido.
+   */
+  valueToHtml: (valor) => {
+    if (valor === null || valor === undefined || valor === false) return "";
+
+    if (typeof valor === "string") return valor.trim();
+
+    if (typeof valor === "number" || valor === true) return String(valor);
+
+    if (Array.isArray(valor)) {
+      const itens = valor
+        .map((item) => PageBuilder.valueToHtml(item))
+        .filter(Boolean);
+
+      if (itens.length === 0) return "";
+      // Uma lista de blocos já formatados não deve virar <li>
+      if (itens.every((item) => /^\s*<(p|ul|ol|table|h[1-6]|div)\b/i.test(item))) {
+        return itens.join("");
+      }
+      return `<ul>${itens.map((item) => `<li>${item}</li>`).join("")}</ul>`;
+    }
+
+    if (typeof valor === "object") {
+      return Object.entries(valor)
+        .map(([chave, item]) => {
+          const conteudo = PageBuilder.valueToHtml(item);
+          if (!conteudo) return "";
+          const rotulo = String(chave).replace(/[_-]+/g, " ");
+          return `<p><strong>${rotulo}:</strong> ${conteudo}</p>`;
+        })
+        .filter(Boolean)
+        .join("");
+    }
+
+    return "";
   },
 };
