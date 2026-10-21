@@ -96,8 +96,8 @@ export const AIManager = {
 
           // Um JSON válido mas vazio montava a ficha em branco e ainda
           // anunciava sucesso: é preciso dizer quantos campos vieram mesmo.
-          const preenchidos = selectedSchema.filter(
-            (section) => data[section.field] && String(data[section.field]).trim(),
+          const preenchidos = selectedSchema.filter((section) =>
+            PageBuilder.valueToHtml(data[section.field]),
           ).length;
 
           alert(

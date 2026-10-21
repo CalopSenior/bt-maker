@@ -259,31 +259,114 @@ export const GeminiClient = {
     /**
      * Analisa o JSON da resposta.
      *
-     * Mesmo com `responseMimeType: application/json`, os modelos embrulham o
-     * JSON em ```json ... ``` com frequência suficiente para valer a pena
-     * limpar antes de analisar.
+     * Mesmo com `responseMimeType: application/json`, o que chega não é
+     * necessariamente o objecto de campos que pedimos. Em vez de recusar
+     * tudo o que não seja exactamente isso (o antigo «formato inesperado»,
+     * que deixava o utilizador sem extração nenhuma apesar de a resposta
+     * estar lá), aceitamos as formas que os modelos devolvem na prática:
+     *
+     *   - embrulhada em ```json ... ```;
+     *   - com texto à volta do objecto (os modelos pensantes comentam);
+     *   - um array com o objecto lá dentro ([{...}]), ou vários objectos
+     *     — um por campo — que se juntam num só;
+     *   - JSON codificado duas vezes (uma string que contém o JSON);
+     *   - o objecto escondido debaixo de uma chave de embrulho
+     *     ("campos", "data", "result"...).
      */
     parseJson(texto) {
-        const limpo = texto
-            .replace(/^\s*```(?:json)?\s*/i, "")
-            .replace(/\s*```\s*$/, "")
-            .trim();
+        const bruto = GeminiClient.stripFences(texto);
 
-        let dados;
-        try {
-            dados = JSON.parse(limpo);
-        } catch (err) {
+        let dados = GeminiClient.jsonFrom(bruto);
+        if (dados === undefined) {
             console.error("Resposta da IA que não é JSON:", texto);
             throw new GeminiError(
                 "A IA não devolveu JSON válido. Tente novamente ou escolha outro modelo."
             );
         }
 
-        if (!dados || typeof dados !== "object" || Array.isArray(dados)) {
-            console.error("Resposta da IA com formato inesperado:", dados);
-            throw new GeminiError("A IA devolveu um formato inesperado (não é um objecto).");
+        dados = GeminiClient.normalizeJson(dados);
+
+        if (!dados) {
+            console.error("Resposta da IA com formato inesperado:", texto);
+            throw new GeminiError(
+                "A IA devolveu JSON que não traz os campos pedidos. " +
+                "Tente novamente ou escolha outro modelo."
+            );
         }
 
         return dados;
+    },
+
+    stripFences(texto) {
+        return String(texto)
+            .replace(/^\s*```(?:json)?\s*/i, "")
+            .replace(/\s*```\s*$/, "")
+            .trim();
+    },
+
+    /**
+     * Analisa o texto como JSON; se houver texto à volta, tenta o maior
+     * bloco entre chaves (ou parêntesis rectos) que exista lá dentro.
+     * Devolve `undefined` quando nada é analisável.
+     */
+    jsonFrom(texto) {
+        try {
+            return JSON.parse(texto);
+        } catch {
+            /* tenta extrair o bloco abaixo */
+        }
+
+        for (const [abre, fecha] of [["{", "}"], ["[", "]"]]) {
+            const inicio = texto.indexOf(abre);
+            const fim = texto.lastIndexOf(fecha);
+            if (inicio < 0 || fim <= inicio) continue;
+            try {
+                return JSON.parse(texto.slice(inicio, fim + 1));
+            } catch {
+                /* passa à forma seguinte */
+            }
+        }
+
+        return undefined;
+    },
+
+    /**
+     * Reduz o que veio a um objecto simples de campos, ou devolve `null`
+     * quando não há lá nada aproveitável. Recursiva porque as formas
+     * acumulam-se: um array com uma string que contém o JSON é comum.
+     */
+    normalizeJson(valor, profundidade = 0) {
+        if (profundidade > 4 || valor === null || valor === undefined) return null;
+
+        // JSON codificado duas vezes
+        if (typeof valor === "string") {
+            const interno = GeminiClient.jsonFrom(GeminiClient.stripFences(valor));
+            return interno === undefined
+                ? null
+                : GeminiClient.normalizeJson(interno, profundidade + 1);
+        }
+
+        // Um array: junta os objectos que traga (um por campo, por exemplo)
+        if (Array.isArray(valor)) {
+            const juntos = valor.reduce((acc, item) => {
+                const objecto = GeminiClient.normalizeJson(item, profundidade + 1);
+                return objecto ? { ...acc, ...objecto } : acc;
+            }, {});
+            return Object.keys(juntos).length > 0 ? juntos : null;
+        }
+
+        if (typeof valor !== "object") return null;
+
+        if (Object.keys(valor).length === 0) return null;
+
+        // Objecto de embrulho: {"campos": {...}} e companhia
+        const EMBRULHOS = ["campos", "fields", "data", "dados", "result", "resultado", "json", "secoes", "secções", "sections"];
+        const chaves = Object.keys(valor);
+        if (chaves.length === 1 && EMBRULHOS.includes(chaves[0].toLowerCase())) {
+            const dentro = GeminiClient.normalizeJson(valor[chaves[0]], profundidade + 1);
+            if (dentro) return dentro;
+        }
+
+        return valor;
     }
 };
