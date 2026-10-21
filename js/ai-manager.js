@@ -1,4 +1,5 @@
 import { PageBuilder } from "./page-builder.js";
+import { GeminiClient } from "./gemini-client.js";
 
 export const AIManager = {
   apiKey: null,
@@ -93,7 +94,18 @@ export const AIManager = {
           // Passa o esquema customizado que o usuário escolheu para montar as folhas A4
           PageBuilder.build(data, selectedSchema);
 
-          alert("Extração e reconstrução finalizadas com sucesso!");
+          // Um JSON válido mas vazio montava a ficha em branco e ainda
+          // anunciava sucesso: é preciso dizer quantos campos vieram mesmo.
+          const preenchidos = selectedSchema.filter(
+            (section) => data[section.field] && String(data[section.field]).trim(),
+          ).length;
+
+          alert(
+            preenchidos === 0
+              ? "A IA não encontrou nenhum dos campos pedidos neste PDF. " +
+                  "Tente outro modelo ou preencha manualmente."
+              : `Extração concluída: ${preenchidos} de ${selectedSchema.length} campo(s) preenchido(s).`,
+          );
         } catch (error) {
           console.error(error);
           alert("Erro na IA: " + error.message);
@@ -165,74 +177,55 @@ export const AIManager = {
       reader.readAsDataURL(file);
     }),
 
-  processWithGemini: async (base64Data, options) => {
-    const retries = 5;
-    const delays = [1000, 2000, 4000, 8000, 16000];
-    let lastError;
+  /**
+   * Chama a IA através do GeminiClient, que trata das tentativas, dos modelos
+   * pensantes e das respostas embrulhadas em ```json.
+   */
+  processWithGemini: async (base64Data, options) =>
+    GeminiClient.generateJson({
+      apiKey: AIManager.apiKey || localStorage.getItem("gemini_api_key") || "",
+      models: AIManager.modelsToTry(options.modelName),
+      prompt: AIManager.buildPrompt(options),
+      pdfBase64: base64Data,
+      onProgress: (mensagem) => {
+        console.info(mensagem);
+        const btn = document.getElementById("btn-ai-fill");
+        if (btn) btn.textContent = `🤖 ${mensagem}`;
+      },
+    }),
 
-    for (let i = 0; i < retries; i++) {
-      try {
-        return await AIManager.callGeminiFetch(base64Data, options);
-      } catch (err) {
-        lastError = err;
-        if (i < retries - 1) await new Promise((r) => setTimeout(r, delays[i]));
-      }
-    }
-    throw new Error(
-      `Falha após ${retries} tentativas. Último erro: ${lastError.message}`,
+  /**
+   * O modelo escolhido primeiro e, a seguir, os restantes da lista: os modelos
+   * "preview" são retirados sem aviso, e sem isto a extração deixava de
+   * funcionar de um dia para o outro.
+   */
+  modelsToTry: (escolhido) => {
+    const todos = Array.from(
+      document.querySelectorAll("#ai-model-select option"),
+    ).map((option) => option.value);
+
+    return [escolhido, ...todos.filter((model) => model !== escolhido)].filter(
+      Boolean,
     );
   },
 
-  callGeminiFetch: async (base64Data, options) => {
-    const apiKey =
-      AIManager.apiKey || localStorage.getItem("gemini_api_key") || "";
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${options.modelName}:generateContent?key=${apiKey}`;
-
-    // Construção Dinâmica do Prompt baseada APENAS nos campos selecionados
+  buildPrompt: (options) => {
     const fieldsPromptList = options.selectedSchema
       .map((f) => `- ${f.field}: ${f.promptDesc}`)
       .join("\n        ");
 
-    let systemInstruction = `Você é um especialista em documentação técnica e processamento de dados. 
+    return `Você é um especialista em documentação técnica e processamento de dados.
         Sua missão é extrair informações do PDF estritamente no formato JSON, focando APENAS nos campos solicitados.
         Mantenha tags de formatação HTML (<b>, <br>, <ul>, <li>). Se houver dados tabulares, gere o HTML de uma <table> completa.
-        
+
         INSTRUÇÕES EXTRAS DO USUÁRIO (Siga rigorosamente):
         ${options.extraInstructions || "Nenhuma instrução extra."}
-        
+
         Nome do Produto Obrigatório: ${options.productName || "Detectar do PDF"}
 
         CAMPOS SOLICITADOS (JSON Keys):
         ${fieldsPromptList}
 
         Se a informação não existir no documento para algum dos campos solicitados, devolva uma string vazia "".`;
-
-    const payload = {
-      contents: [
-        {
-          parts: [
-            { text: systemInstruction },
-            { inlineData: { mimeType: "application/pdf", data: base64Data } },
-          ],
-        },
-      ],
-      generationConfig: { responseMimeType: "application/json" },
-    };
-
-    const response = await fetch(endpoint, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(
-        errorData.error?.message || `Erro HTTP ${response.status}`,
-      );
-    }
-
-    const result = await response.json();
-    return JSON.parse(result.candidates?.[0]?.content?.parts?.[0]?.text);
   },
 };

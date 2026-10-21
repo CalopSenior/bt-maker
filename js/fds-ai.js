@@ -11,8 +11,7 @@
 
 import { FdsBuilder } from "./fds-builder.js";
 import { withAppendix } from "./fds-schema.js";
-
-const RETRY_DELAYS = [1000, 2000, 4000, 8000, 16000];
+import { GeminiClient } from "./gemini-client.js";
 
 export const FdsAI = {
     apiKey: null,
@@ -94,7 +93,19 @@ export const FdsAI = {
                 button.textContent = "🏗️ A montar o documento...";
                 FdsBuilder.build(data, withAppendix(schema));
 
-                alert("Ficha gerada com sucesso. Reveja todas as secções antes de publicar.");
+                // Um JSON válido mas vazio montava a ficha em branco e ainda
+                // anunciava sucesso: é preciso dizer o que veio mesmo.
+                const preenchidas = schema.filter(
+                    section => data[section.field] && String(data[section.field]).trim()
+                ).length;
+
+                alert(
+                    preenchidas === 0
+                        ? "A IA não encontrou nenhuma das secções pedidas neste PDF. " +
+                          "Tente outro modelo ou preencha manualmente."
+                        : `Ficha gerada: ${preenchidas} de ${schema.length} secção(ões) preenchida(s). ` +
+                          "Reveja tudo antes de publicar — uma FDS é um documento legal."
+                );
             } catch (err) {
                 console.error(err);
                 alert("Erro na IA: " + err.message);
@@ -156,36 +167,43 @@ export const FdsAI = {
             reader.readAsDataURL(file);
         }),
 
+    /**
+     * Chama a IA através do GeminiClient, que trata das tentativas, dos modelos
+     * pensantes e das respostas embrulhadas em ```json.
+     */
     async process(base64Data, options) {
-        let lastError;
-
-        for (let tentativa = 0; tentativa < RETRY_DELAYS.length; tentativa++) {
-            try {
-                return await FdsAI.callGemini(base64Data, options);
-            } catch (err) {
-                lastError = err;
-                if (tentativa < RETRY_DELAYS.length - 1) {
-                    await new Promise(resolve => setTimeout(resolve, RETRY_DELAYS[tentativa]));
-                }
+        return GeminiClient.generateJson({
+            apiKey: FdsAI.apiKey || localStorage.getItem("gemini_api_key") || "",
+            models: FdsAI.modelsToTry(options.modelName),
+            prompt: FdsAI.buildPrompt(options),
+            pdfBase64: base64Data,
+            onProgress: mensagem => {
+                console.info(mensagem);
+                const btn = document.getElementById("btn-fds-ai");
+                if (btn) btn.textContent = `\u{1F916} ${mensagem}`;
             }
-        }
-
-        throw new Error(
-            `Falha após ${RETRY_DELAYS.length} tentativas. Último erro: ${lastError.message}`
-        );
+        });
     },
 
-    async callGemini(base64Data, options) {
-        const apiKey = FdsAI.apiKey || localStorage.getItem("gemini_api_key") || "";
-        const endpoint =
-            `https://generativelanguage.googleapis.com/v1beta/models/${options.modelName}` +
-            `:generateContent?key=${apiKey}`;
+    /**
+     * O modelo escolhido primeiro e, a seguir, os restantes da lista: os
+     * modelos "preview" são retirados sem aviso, e sem isto a extração deixava
+     * de funcionar de um dia para o outro.
+     */
+    modelsToTry(escolhido) {
+        const todos = Array.from(
+            document.querySelectorAll("#fds-ai-model option")
+        ).map(option => option.value);
 
+        return [escolhido, ...todos.filter(model => model !== escolhido)].filter(Boolean);
+    },
+
+    buildPrompt(options) {
         const campos = options.schema
             .map(section => `- ${section.field}: ${section.title}. ${section.promptDesc || ""}`)
             .join("\n        ");
 
-        const instrucoes = `Você é um especialista em segurança química e na norma ABNT NBR 14725:2023.
+        return `Você é um especialista em segurança química e na norma ABNT NBR 14725:2023.
         Leia a Ficha de Dados de Segurança em PDF anexada e devolva um JSON cujas chaves são exactamente
         os campos pedidos abaixo e cujos valores são HTML pronto a publicar.
 
@@ -208,32 +226,5 @@ export const FdsAI = {
 
         CAMPOS PEDIDOS (chaves do JSON):
         ${campos}`;
-
-        const response = await fetch(endpoint, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                contents: [
-                    {
-                        parts: [
-                            { text: instrucoes },
-                            { inlineData: { mimeType: "application/pdf", data: base64Data } }
-                        ]
-                    }
-                ],
-                generationConfig: { responseMimeType: "application/json", temperature: 0.2 }
-            })
-        });
-
-        if (!response.ok) {
-            const erro = await response.json().catch(() => ({}));
-            throw new Error(erro.error?.message || `Erro HTTP ${response.status}`);
-        }
-
-        const resultado = await response.json();
-        const texto = resultado.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (!texto) throw new Error("A IA devolveu uma resposta vazia.");
-
-        return JSON.parse(texto);
     }
 };
